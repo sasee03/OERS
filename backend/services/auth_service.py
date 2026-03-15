@@ -33,5 +33,5 @@ def login_user(db:Session,username:str,password:str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
-    token = create_access_token(data={"sub":str(user.id),"role":user.role.value})
+    token = create_access_token(data={"sub":str(user.id),"role":user.role.value})    
     return token,user

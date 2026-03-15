@@ -3,18 +3,16 @@ import { createContext, useContext, useState } from 'react'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  // Initialize from localStorage so user stays logged in on page refresh
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('user')
-    return stored ? JSON.parse(stored) : null
+  const [user,  setUser]  = useState(() => {
+    const s = localStorage.getItem('user')
+    return s ? JSON.parse(s) : null
   })
-
   const [token, setToken] = useState(() => localStorage.getItem('token'))
 
   const login = (userData, accessToken) => {
     setUser(userData)
     setToken(accessToken)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('user',  JSON.stringify(userData))
     localStorage.setItem('token', accessToken)
   }
 
@@ -26,19 +24,10 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        logout,
-        isAuthenticated: !!token,
-      }}
-    >
+    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-// Custom hook — use this in any component: const { user, login, logout } = useAuth()
 export const useAuth = () => useContext(AuthContext)

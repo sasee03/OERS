@@ -1,12 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import Base,engine
+from database import Base, engine
 import models.user_model
-from routes import auth
+import models.exam_model
+import models.question_model
+import models.assignment_model
+import models.submission_model
+from routes import auth, admin, student
 
 Base.metadata.create_all(bind=engine)
-app=FastAPI()
+
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173"],
@@ -16,6 +22,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-@app.get("/" ,tags=["Normal"])
+app.include_router(admin.router)
+app.include_router(student.router)
+
+@app.get("/", tags=["Normal"])
 def root():
-    return {"message":"Hello Hi Welcome"}
+    return {"message": "Hello Hi Welcome"}
