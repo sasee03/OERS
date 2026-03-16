@@ -3,22 +3,36 @@ import { useNavigate } from "react-router-dom"
 import { createExam } from "../../services/adminService"
 import Navbar from "../../components/Navbar"
 
+interface FormState {
+  title: string
+  total_questions: string
+  start_time: string
+  end_time: string
+}
+
 export default function CreateExam() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ title: "", total_questions: "", start_time: "", end_time: "" })
-  const [error, setError] = useState("")
+  const [form, setForm]       = useState<FormState>({ title: "", total_questions: "", start_time: "", end_time: "" })
+  const [error, setError]     = useState("")
   const [loading, setLoading] = useState(false)
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError("")
     try {
-      const payload = { ...form, total_questions: parseInt(form.total_questions), start_time: new Date(form.start_time).toISOString(), end_time: new Date(form.end_time).toISOString() }
+      const payload = {
+        title: form.title,
+        total_questions: parseInt(form.total_questions),
+        start_time: new Date(form.start_time).toISOString(),
+        end_time:   new Date(form.end_time).toISOString(),
+      }
       const { data } = await createExam(payload)
       navigate(`/admin/exams/${data.id}/questions`)
-    } catch (err) {
-      const d = err.response?.data?.detail
-      setError(Array.isArray(d) ? d[0].msg : d || "Failed to create exam")
+    } catch (err: unknown) {
+      const d = (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail
+      setError(Array.isArray(d) ? (d[0] as { msg: string }).msg : (d as string) || "Failed to create exam")
     } finally { setLoading(false) }
   }
 
@@ -46,16 +60,15 @@ export default function CreateExam() {
                 className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
             </div>
             <div className="grid grid-cols-2 gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Start Time</label>
-                <input name="start_time" type="datetime-local" value={form.start_time} onChange={handleChange} required
-                  className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">End Time</label>
-                <input name="end_time" type="datetime-local" value={form.end_time} onChange={handleChange} required
-                  className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
-              </div>
+              {(["start_time","end_time"] as const).map(name => (
+                <div key={name} className="flex flex-col gap-2">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+                    {name === "start_time" ? "Start Time" : "End Time"}
+                  </label>
+                  <input name={name} type="datetime-local" value={form[name]} onChange={handleChange} required
+                    className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+                </div>
+              ))}
             </div>
             <div className="flex gap-4 pt-4">
               <button type="button" onClick={() => navigate("/admin")}

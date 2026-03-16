@@ -1,29 +1,30 @@
 import { useState, useEffect } from "react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { getMyScore, getLeaderboard, getExam } from "../../services/studentService"
 import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
+import { Exam, Submission, LeaderboardEntry } from "../../types"
 
 export default function ScoreLeaderboard() {
-  const { id } = useParams()
+  const { id }   = useParams<{ id: string }>()
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const [score, setScore] = useState(null)
-  const [board, setBoard] = useState([])
-  const [exam, setExam] = useState(null)
-  const [tab, setTab] = useState("score")
+
+  const [score,  setScore]  = useState<Submission | null>(null)
+  const [board,  setBoard]  = useState<LeaderboardEntry[]>([])
+  const [exam,   setExam]   = useState<Exam | null>(null)
+  const [tab,    setTab]    = useState<"score" | "board">("score")
   const [missed, setMissed] = useState(false)
 
   useEffect(() => {
-    getExam(id).then(r => setExam(r.data))
-    getLeaderboard(id).then(r => setBoard(r.data))
-    getMyScore(id).then(r => setScore(r.data)).catch(() => setMissed(true))
+    getExam(id!).then(r => setExam(r.data))
+    getLeaderboard(id!).then(r => setBoard(r.data))
+    getMyScore(id!).then(r => setScore(r.data)).catch(() => setMissed(true))
   }, [id])
 
-  const medals = ["🥇","🥈","🥉"]
-  const myEntry = board.find(e => e.student_id === user?.id)
-  const pct = score ? ((score.score / score.total_marks) * 100).toFixed(1) : 0
-  const passed = pct >= 60
+  const medals   = ["🥇","🥈","🥉"]
+  const myEntry  = board.find(e => e.student_id === user?.id)
+  const pct      = score ? ((score.score / score.total_marks) * 100).toFixed(1) : "0"
+  const passed   = parseFloat(pct) >= 60
 
   return (
     <div className="min-h-screen bg-white">
@@ -35,13 +36,14 @@ export default function ScoreLeaderboard() {
               <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2">{exam?.title}</p>
               <h1 className="text-4xl font-light uppercase tracking-[0.2em]">Results</h1>
             </div>
-            <Link to="/student" className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
+            <Link to="/student"
+              className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
               ← Dashboard
             </Link>
           </div>
 
           <div className="flex gap-0 border-b border-zinc-100 mb-8">
-            {["score","board"].map(t => (
+            {(["score","board"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`text-[10px] uppercase tracking-[0.2em] px-6 py-3 border-b-2 -mb-px transition-colors ${tab === t ? "border-black text-black" : "border-transparent text-zinc-400 hover:text-black"}`}>
                 {t === "score" ? "My Score" : "Leaderboard"}
@@ -67,7 +69,7 @@ export default function ScoreLeaderboard() {
                   <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400">{passed ? "Passed" : "Failed"}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-px bg-zinc-100 mb-8">
-                  {[[score.score,"Your Score"],[score.total_marks,"Total"],[`${pct}%`,"Percentage"]].map(([val,label]) => (
+                  {([[score.score,"Your Score"],[score.total_marks,"Total"],[`${pct}%`,"Percentage"]] as [string|number, string][]).map(([val, label]) => (
                     <div key={label} className="bg-white p-6 text-center">
                       <p className="text-2xl font-light mb-1">{val}</p>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</p>
@@ -76,11 +78,14 @@ export default function ScoreLeaderboard() {
                 </div>
                 {myEntry && (
                   <p className="text-center text-[10px] uppercase tracking-[0.2em] text-zinc-500 border border-zinc-100 py-4">
-                    Ranked <span className="text-black font-medium">#{myEntry.rank}</span> out of <span className="text-black font-medium">{board.length}</span> students
+                    Ranked <span className="text-black font-medium">#{myEntry.rank}</span> out of{" "}
+                    <span className="text-black font-medium">{board.length}</span> students
                   </p>
                 )}
               </div>
-            ) : <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading score...</p>
+            ) : (
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading score...</p>
+            )
           )}
 
           {tab === "board" && (
@@ -93,17 +98,23 @@ export default function ScoreLeaderboard() {
                 {board.map(entry => (
                   <div key={entry.student_id}
                     className={`flex items-center gap-6 px-6 py-4 border transition-colors ${entry.student_id === user?.id ? "border-black" : "border-zinc-100 hover:border-zinc-200"}`}>
-                    <span className="text-lg w-8 text-center">{entry.rank <= 3 ? medals[entry.rank-1] : `#${entry.rank}`}</span>
+                    <span className="text-lg w-8 text-center">
+                      {entry.rank <= 3 ? medals[entry.rank - 1] : `#${entry.rank}`}
+                    </span>
                     <div className="flex-1">
                       <p className="text-sm font-medium flex items-center gap-2">
                         {entry.username}
-                        {entry.student_id === user?.id && <span className="text-[10px] uppercase tracking-[0.2em] bg-black text-white px-2 py-0.5">You</span>}
+                        {entry.student_id === user?.id && (
+                          <span className="text-[10px] uppercase tracking-[0.2em] bg-black text-white px-2 py-0.5">You</span>
+                        )}
                       </p>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{entry.time_taken}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium">{entry.score}/{entry.total_marks}</p>
-                      <p className={`text-[10px] uppercase tracking-[0.2em] ${entry.percentage >= 60 ? "text-black" : "text-zinc-400"}`}>{entry.percentage}%</p>
+                      <p className={`text-[10px] uppercase tracking-[0.2em] ${entry.percentage >= 60 ? "text-black" : "text-zinc-400"}`}>
+                        {entry.percentage}%
+                      </p>
                     </div>
                   </div>
                 ))}

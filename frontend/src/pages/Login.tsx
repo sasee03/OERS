@@ -4,24 +4,26 @@ import { loginUser } from "../services/authService"
 import { useAuth } from "../context/AuthContext"
 
 export default function Login() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [form, setForm] = useState({ username: "", password: "" })
-  const [error, setError] = useState("")
+  const { login }  = useAuth()
+  const navigate   = useNavigate()
+  const location   = useLocation()
+  const [form, setForm]       = useState({ username: "", password: "" })
+  const [error, setError]     = useState("")
   const [loading, setLoading] = useState(false)
-  const successMsg = location.state?.message
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+  const successMsg = (location.state as { message?: string })?.message
 
-  const handleSubmit = async (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError("")
     try {
       const { data } = await loginUser(form)
       login(data.user, data.access_token)
       navigate(data.user.role === "admin" ? "/admin" : "/student")
-    } catch (err) {
-      const d = err.response?.data?.detail
-      setError(Array.isArray(d) ? d[0].msg : d || "Login failed")
+    } catch (err: unknown) {
+      const d = (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail
+      setError(Array.isArray(d) ? (d[0] as { msg: string }).msg : (d as string) || "Login failed")
     } finally { setLoading(false) }
   }
 
@@ -34,19 +36,17 @@ export default function Login() {
         </div>
 
         {successMsg && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-zinc-500 mb-6">{successMsg}</p>}
-        {error && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-red-500 mb-6">{error}</p>}
+        {error      && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-red-500 mb-6">{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Username</label>
-            <input name="username" value={form.username} onChange={handleChange} required
-              className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Password</label>
-            <input name="password" type="password" value={form.password} onChange={handleChange} required
-              className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
-          </div>
+          {(["username", "password"] as const).map((name) => (
+            <div key={name} className="flex flex-col gap-2">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{name}</label>
+              <input name={name} type={name === "password" ? "password" : "text"}
+                value={form[name]} onChange={handleChange} required
+                className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+            </div>
+          ))}
           <button type="submit" disabled={loading}
             className="bg-black text-white text-[10px] uppercase tracking-widest py-3 hover:bg-zinc-800 transition-all disabled:opacity-50 mt-4">
             {loading ? "Signing in..." : "Sign In"}

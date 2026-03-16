@@ -4,19 +4,21 @@ import { register } from "../services/authService"
 
 export default function Register() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: "", email: "", password: "", role: "student" })
-  const [error, setError] = useState("")
+  const [form, setForm]       = useState({ username: "", email: "", password: "", role: "student" as "admin" | "student" })
+  const [error, setError]     = useState("")
   const [loading, setLoading] = useState(false)
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError("")
     try {
       await register(form)
       navigate("/login", { state: { message: "Account created! Please log in." } })
-    } catch (err) {
-      const d = err.response?.data?.detail
-      setError(Array.isArray(d) ? d[0].msg : d || "Registration failed")
+    } catch (err: unknown) {
+      const d = (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail
+      setError(Array.isArray(d) ? (d[0] as { msg: string }).msg : (d as string) || "Registration failed")
     } finally { setLoading(false) }
   }
 
@@ -31,7 +33,7 @@ export default function Register() {
         {error && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-red-500 mb-6">{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-          {[["username","Username","text"],["email","Email","email"],["password","Password","password"]].map(([name,label,type]) => (
+          {([["username","Username","text"],["email","Email","email"],["password","Password","password"]] as const).map(([name, label, type]) => (
             <div key={name} className="flex flex-col gap-2">
               <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</label>
               <input name={name} type={type} value={form[name]} onChange={handleChange} required

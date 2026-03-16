@@ -19,8 +19,7 @@ def assign_students(db: Session, exam_id: int,
     return results
 
 
-def get_assignments_by_exam(db: Session,
-                             exam_id: int) -> list[ExamAssignment]:
+def get_assignments_by_exam(db: Session,exam_id: int) -> list[ExamAssignment]:
     return (
         db.query(ExamAssignment)
         .filter(ExamAssignment.exam_id == exam_id)
@@ -28,8 +27,7 @@ def get_assignments_by_exam(db: Session,
     )
 
 
-def is_student_assigned(db: Session, exam_id: int,
-                         student_email: str) -> bool:
+def is_student_assigned(db: Session, exam_id: int,student_email: str) -> bool:
     return (
         db.query(ExamAssignment)
         .filter(
@@ -40,8 +38,7 @@ def is_student_assigned(db: Session, exam_id: int,
     )
 
 
-def link_student_id(db: Session, exam_id: int,
-                    student_email: str, student_id: int) -> None:
+def link_student_id(db: Session, exam_id: int,student_email: str, student_id: int) -> None:
     """Called when a registered student opens an assigned exam."""
     assignment = (
         db.query(ExamAssignment)
