@@ -1,104 +1,62 @@
-import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { loginUser } from '../services/authService'
-import { useAuth } from '../context/AuthContext'
+import { useState } from "react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import { loginUser } from "../services/authService"
+import { useAuth } from "../context/AuthContext"
 
 export default function Login() {
-  const { login }  = useAuth()
-  const navigate   = useNavigate()
-  const location   = useLocation()
-
-  const [form, setForm]       = useState({ username: '', password: '' })
-  const [error, setError]     = useState('')
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [form, setForm] = useState({ username: "", password: "" })
+  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-
-  // Message passed from Register page on successful registration
   const successMsg = location.state?.message
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
+    e.preventDefault(); setLoading(true); setError("")
     try {
       const { data } = await loginUser(form)
-
-      // Store token + user in context and localStorage
       login(data.user, data.access_token)
-
-      // Redirect based on role
-      if (data.user.role === 'admin') {
-        navigate('/admin')
-      } else {
-        navigate('/student')
-      }
+      navigate(data.user.role === "admin" ? "/admin" : "/student")
     } catch (err) {
-      const detail = err.response?.data?.detail
-      if (Array.isArray(detail)) {
-        setError(detail[0].msg)
-      } else {
-        setError(detail || 'Login failed. Please try again.')
-      }
-    } finally {
-      setLoading(false)
-    }
+      const d = err.response?.data?.detail
+      setError(Array.isArray(d) ? d[0].msg : d || "Login failed")
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className='auth-page'>
-      <div className='auth-card'>
-
-        <div className='auth-header'>
-          <div className='auth-logo'>📝</div>
-          <h1>Welcome Back</h1>
-          <p>Sign in to your account</p>
+    <div className="min-h-screen bg-white flex items-center justify-center px-8">
+      <div className="w-full max-w-sm">
+        <div className="mb-12 text-center">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-4">ExamPortal</p>
+          <h1 className="text-4xl font-light uppercase tracking-[0.2em]">Sign In</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className='auth-form'>
+        {successMsg && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-zinc-500 mb-6">{successMsg}</p>}
+        {error && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-red-500 mb-6">{error}</p>}
 
-          {successMsg && <div className='success-box'>{successMsg}</div>}
-          {error      && <div className='error-box'>{error}</div>}
-
-          <div className='form-group'>
-            <label htmlFor='username'>Username</label>
-            <input
-              id='username'
-              name='username'
-              type='text'
-              value={form.username}
-              onChange={handleChange}
-              placeholder='johndoe'
-              required
-            />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Username</label>
+            <input name="username" value={form.username} onChange={handleChange} required
+              className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
           </div>
-
-          <div className='form-group'>
-            <label htmlFor='password'>Password</label>
-            <input
-              id='password'
-              name='password'
-              type='password'
-              value={form.password}
-              onChange={handleChange}
-              placeholder='••••••••'
-              required
-            />
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Password</label>
+            <input name="password" type="password" value={form.password} onChange={handleChange} required
+              className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
           </div>
-
-          <button type='submit' className='btn-primary' disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" disabled={loading}
+            className="bg-black text-white text-[10px] uppercase tracking-widest py-3 hover:bg-zinc-800 transition-all disabled:opacity-50 mt-4">
+            {loading ? "Signing in..." : "Sign In"}
           </button>
-
         </form>
 
-        <p className='auth-switch'>
-          Don't have an account? <Link to='/register'>Register</Link>
+        <p className="text-center mt-8 text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+          No account?{" "}
+          <Link to="/register" className="text-black border-b border-black">Register</Link>
         </p>
-
       </div>
     </div>
   )

@@ -7,7 +7,7 @@ export default function AdminLeaderboard() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [board, setBoard] = useState([])
-  const [exam,  setExam]  = useState(null)
+  const [exam, setExam] = useState(null)
 
   useEffect(() => {
     getExam(id).then(r => setExam(r.data))
@@ -17,32 +17,44 @@ export default function AdminLeaderboard() {
   const medals = ["🥇","🥈","🥉"]
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="container narrow">
-        <div className="page-header flex-between">
-          <div><h1>🏆 Leaderboard</h1><p>{exam?.title}</p></div>
-          <button onClick={() => navigate("/admin")} className="btn-outline">← Back</button>
-        </div>
-        {board.length === 0 ? (
-          <div className="empty-state"><span>🏆</span><h3>No submissions yet</h3></div>
-        ) : (
-          <div className="leaderboard">
-            {board.map(entry => (
-              <div key={entry.student_id} className={`leaderboard-row rank-${entry.rank <= 3 ? entry.rank : "other"}`}>
-                <span className="rank-badge">{entry.rank <= 3 ? medals[entry.rank-1] : `#${entry.rank}`}</span>
-                <div className="lb-info">
-                  <strong>{entry.username}</strong>
-                  <span className="muted">{entry.time_taken}</span>
-                </div>
-                <div className="lb-score">
-                  <span>{entry.score}/{entry.total_marks}</span>
-                  <span className={`badge ${entry.percentage >= 60 ? "badge-success" : "badge-danger"}`}>{entry.percentage}%</span>
-                </div>
-              </div>
-            ))}
+      <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className="max-w-2xl">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2">{exam?.title}</p>
+              <h1 className="text-4xl font-light uppercase tracking-[0.2em]">Leaderboard</h1>
+            </div>
+            <button onClick={() => navigate("/admin")}
+              className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
+              ← Back
+            </button>
           </div>
-        )}
+
+          {board.length === 0 ? (
+            <div className="border border-zinc-100 py-16 text-center">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">No submissions yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {board.map(entry => (
+                <div key={entry.student_id}
+                  className={`flex items-center gap-6 px-6 py-4 border transition-colors ${entry.rank <= 3 ? "border-zinc-200" : "border-zinc-100"}`}>
+                  <span className="text-lg w-8 text-center">{entry.rank <= 3 ? medals[entry.rank - 1] : `#${entry.rank}`}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{entry.username}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{entry.time_taken}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{entry.score}/{entry.total_marks}</p>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${entry.percentage >= 60 ? "text-black" : "text-zinc-400"}`}>{entry.percentage}%</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

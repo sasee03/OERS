@@ -1,96 +1,96 @@
 import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { getExams, deleteExam, searchExams } from "../../services/adminService"
 import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
 import ExamCard from "../../components/ExamCard"
 
 export default function AdminDashboard() {
-  const { user }                = useAuth()
-  const navigate                = useNavigate()
-  const [exams, setExams]       = useState([])
-  const [query, setQuery]       = useState("")
-  const [loading, setLoading]   = useState(true)
+  const { user } = useAuth()
+  const [exams, setExams] = useState([])
+  const [query, setQuery] = useState("")
+  const [loading, setLoading] = useState(true)
 
-  const fetchExams = async () => {
-    const { data } = await getExams()
-    setExams(data); setLoading(false)
-  }
-
+  const fetchExams = async () => { const { data } = await getExams(); setExams(data); setLoading(false) }
   useEffect(() => { fetchExams() }, [])
 
   const handleSearch = async (e) => {
     e.preventDefault()
     if (!query.trim()) { fetchExams(); return }
-    const { data } = await searchExams(query)
-    setExams(data)
+    const { data } = await searchExams(query); setExams(data)
   }
-
   const handleDelete = async (id) => {
-    if (!confirm("Delete this exam? This cannot be undone.")) return
-    await deleteExam(id)
-    fetchExams()
+    if (!confirm("Delete this exam?")) return
+    await deleteExam(id); fetchExams()
   }
 
-  const active    = exams.filter(e => new Date() >= new Date(e.start_time) && new Date() <= new Date(e.end_time) && e.is_active)
-  const inactive  = exams.filter(e => !active.includes(e))
+  const active = exams.filter(e => new Date() >= new Date(e.start_time) && new Date() <= new Date(e.end_time) && e.is_active)
+  const inactive = exams.filter(e => !active.includes(e))
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="container">
-        <div className="page-header flex-between">
+      <div className="max-w-7xl mx-auto px-8 py-12">
+
+        <div className="flex items-end justify-between mb-12">
           <div>
-            <h1>Welcome, {user?.username} 👋</h1>
-            <p>Manage your exams and track student performance</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2">Welcome back</p>
+            <h1 className="text-4xl font-light uppercase tracking-[0.2em]">{user?.username}</h1>
           </div>
-          <Link to="/admin/exams/create" className="btn-primary">+ New Exam</Link>
+          <Link to="/admin/exams/create"
+            className="bg-black text-white text-[10px] uppercase tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
+            + New Exam
+          </Link>
         </div>
 
-        <div className="stats-row">
-          <div className="stat-box"><h3>{exams.length}</h3><p>Total Exams</p></div>
-          <div className="stat-box"><h3>{active.length}</h3><p>Live Now</p></div>
-          <div className="stat-box"><h3>{inactive.length}</h3><p>Inactive</p></div>
+        <div className="grid grid-cols-3 gap-px bg-zinc-100 mb-12">
+          {[[exams.length,"Total Exams"],[active.length,"Live Now"],[inactive.length,"Inactive"]].map(([n,label]) => (
+            <div key={label} className="bg-white p-8 text-center">
+              <p className="text-4xl font-light mb-2">{n}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</p>
+            </div>
+          ))}
         </div>
 
-        <form onSubmit={handleSearch} className="search-bar">
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search exams..." />
-          <button type="submit" className="btn-primary">Search</button>
-          {query && <button type="button" onClick={() => { setQuery(""); fetchExams() }} className="btn-outline">Clear</button>}
+        <form onSubmit={handleSearch} className="flex gap-0 mb-12 max-w-lg">
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search exams..."
+            className="flex-1 border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
+          <button type="submit" className="bg-black text-white text-[10px] uppercase tracking-widest px-4 py-2 hover:bg-zinc-800 transition-all ml-4">
+            Search
+          </button>
+          {query && <button type="button" onClick={() => { setQuery(""); fetchExams() }}
+            className="text-[10px] uppercase tracking-widest border-b border-zinc-300 px-4 py-2 ml-2 hover:border-black transition-all">
+            Clear
+          </button>}
         </form>
 
         {loading ? (
-          <div className="loading">Loading exams...</div>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading...</p>
         ) : exams.length === 0 ? (
-          <div className="empty-state">
-            <span>📋</span>
-            <h3>No exams yet</h3>
-            <Link to="/admin/exams/create" className="btn-primary">Create your first exam</Link>
+          <div className="text-center py-24 border border-zinc-100">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-6">No exams yet</p>
+            <Link to="/admin/exams/create" className="bg-black text-white text-[10px] uppercase tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
+              Create First Exam
+            </Link>
           </div>
-        ) : (
-          <>
-            {active.length > 0 && (
-              <div className="section">
-                <h2>🟢 Active Exams</h2>
-                <div className="cards-grid">
-                  {active.map(exam => (
-                    <ExamCard key={exam.id} exam={exam} role="admin" onDelete={handleDelete} />
-                  ))}
-                </div>
+        ) : (<>
+          {active.length > 0 && (
+            <div className="mb-12">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-6">Active Exams</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {active.map(exam => <ExamCard key={exam.id} exam={exam} role="admin" onDelete={handleDelete} />)}
               </div>
-            )}
-            {inactive.length > 0 && (
-              <div className="section">
-                <h2>Inactive / Upcoming</h2>
-                <div className="cards-grid">
-                  {inactive.map(exam => (
-                    <ExamCard key={exam.id} exam={exam} role="admin" onDelete={handleDelete} />
-                  ))}
-                </div>
+            </div>
+          )}
+          {inactive.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-6">Inactive / Upcoming</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {inactive.map(exam => <ExamCard key={exam.id} exam={exam} role="admin" onDelete={handleDelete} />)}
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </>)}
       </div>
     </div>
   )

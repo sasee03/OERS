@@ -1,122 +1,61 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { register } from '../services/authService'
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { register } from "../services/authService"
 
 export default function Register() {
   const navigate = useNavigate()
-
-  const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'student',
-  })
-  const [error, setError]     = useState('')
+  const [form, setForm] = useState({ username: "", email: "", password: "", role: "student" })
+  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
+    e.preventDefault(); setLoading(true); setError("")
     try {
       await register(form)
-      navigate('/login', {
-        state: { message: 'Account created successfully! Please log in.' },
-      })
+      navigate("/login", { state: { message: "Account created! Please log in." } })
     } catch (err) {
-      const detail = err.response?.data?.detail
-      // Pydantic validation errors come as an array
-      if (Array.isArray(detail)) {
-        setError(detail[0].msg)
-      } else {
-        setError(detail || 'Registration failed. Please try again.')
-      }
-    } finally {
-      setLoading(false)
-    }
+      const d = err.response?.data?.detail
+      setError(Array.isArray(d) ? d[0].msg : d || "Registration failed")
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className='auth-page'>
-      <div className='auth-card'>
-
-        <div className='auth-header'>
-          <div className='auth-logo'>📝</div>
-          <h1>Create Account</h1>
-          <p>Join ExamPortal today</p>
+    <div className="min-h-screen bg-white flex items-center justify-center px-8">
+      <div className="w-full max-w-sm">
+        <div className="mb-12 text-center">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-4">ExamPortal</p>
+          <h1 className="text-4xl font-light uppercase tracking-[0.2em]">Create Account</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className='auth-form'>
+        {error && <p className="text-[10px] uppercase tracking-[0.2em] text-center text-red-500 mb-6">{error}</p>}
 
-          {error && <div className='error-box'>{error}</div>}
-
-          <div className='form-group'>
-            <label htmlFor='username'>Username</label>
-            <input
-              id='username'
-              name='username'
-              type='text'
-              value={form.username}
-              onChange={handleChange}
-              placeholder='johndoe'
-              required
-            />
-          </div>
-
-          <div className='form-group'>
-            <label htmlFor='email'>Email Address</label>
-            <input
-              id='email'
-              name='email'
-              type='email'
-              value={form.email}
-              onChange={handleChange}
-              placeholder='john@example.com'
-              required
-            />
-          </div>
-
-          <div className='form-group'>
-            <label htmlFor='password'>Password</label>
-            <input
-              id='password'
-              name='password'
-              type='password'
-              value={form.password}
-              onChange={handleChange}
-              placeholder='Minimum 6 characters'
-              required
-            />
-          </div>
-
-          <div className='form-group'>
-            <label htmlFor='role'>Register As</label>
-            <select
-              id='role'
-              name='role'
-              value={form.role}
-              onChange={handleChange}
-            >
-              <option value='student'>Student</option>
-              <option value='admin'>Admin</option>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          {[["username","Username","text"],["email","Email","email"],["password","Password","password"]].map(([name,label,type]) => (
+            <div key={name} className="flex flex-col gap-2">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</label>
+              <input name={name} type={type} value={form[name]} onChange={handleChange} required
+                className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+            </div>
+          ))}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Role</label>
+            <select name="role" value={form.role} onChange={handleChange}
+              className="border-b border-black bg-transparent py-2 text-sm focus:outline-none appearance-none">
+              <option value="student">Student</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
-
-          <button type='submit' className='btn-primary' disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
+          <button type="submit" disabled={loading}
+            className="bg-black text-white text-[10px] uppercase tracking-widest py-3 hover:bg-zinc-800 transition-all disabled:opacity-50 mt-4">
+            {loading ? "Creating..." : "Create Account"}
           </button>
-
         </form>
 
-        <p className='auth-switch'>
-          Already have an account? <Link to='/login'>Sign In</Link>
+        <p className="text-center mt-8 text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+          Have an account?{" "}
+          <Link to="/login" className="text-black border-b border-black">Sign In</Link>
         </p>
-
       </div>
     </div>
   )

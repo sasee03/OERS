@@ -4,73 +4,64 @@ import { getExam, startExam } from "../../services/studentService"
 import Navbar from "../../components/Navbar"
 
 export default function ExamNote() {
-  const { id }   = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
-
-  const [exam,    setExam]    = useState(null)
-  const [error,   setError]   = useState("")
+  const [exam, setExam] = useState(null)
+  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    getExam(id).then(r => setExam(r.data)).catch(() => navigate("/student"))
-  }, [id])
+  useEffect(() => { getExam(id).then(r => setExam(r.data)).catch(() => navigate("/student")) }, [id])
 
   const handleStart = async () => {
     setLoading(true); setError("")
-    try {
-      await startExam(id)
-      navigate(`/student/exams/${id}/attempt`)
-    } catch (err) {
-      const d = err.response?.data?.detail
-      setError(d || "Could not start exam")
-      setLoading(false)
-    }
+    try { await startExam(id); navigate(`/student/exams/${id}/attempt`) }
+    catch (err) { setError(err.response?.data?.detail || "Could not start exam"); setLoading(false) }
   }
 
-  if (!exam) return <div className="page"><Navbar /><div className="container loading">Loading...</div></div>
+  if (!exam) return <div className="min-h-screen bg-white"><Navbar minimal /><p className="text-center pt-24 text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading...</p></div>
 
-  const duration = Math.round(
-    (new Date(exam.end_time) - new Date(exam.start_time)) / 60000
-  )
+  const duration = Math.round((new Date(exam.end_time) - new Date(exam.start_time)) / 60000)
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-white">
       <Navbar minimal />
-      <div className="container narrow">
-        <div className="note-card">
-          <div className="note-icon">📋</div>
-          <h1>{exam.title}</h1>
+      <div className="max-w-7xl mx-auto px-8 py-16">
+        <div className="max-w-xl mx-auto">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2 text-center">You are about to start</p>
+          <h1 className="text-4xl font-light uppercase tracking-[0.2em] text-center mb-12">{exam.title}</h1>
 
-          <div className="note-info-grid">
-            <div className="note-info-item">
-              <span>❓</span>
-              <div><strong>{exam.total_questions}</strong><p>Questions</p></div>
-            </div>
-            <div className="note-info-item">
-              <span>⏱</span>
-              <div><strong>{duration} mins</strong><p>Duration</p></div>
-            </div>
-            <div className="note-info-item">
-              <span>🔒</span>
-              <div><strong>One Attempt</strong><p>Cannot retake</p></div>
-            </div>
+          <div className="grid grid-cols-3 gap-px bg-zinc-100 mb-12">
+            {[[exam.total_questions,"Questions"],[`${duration} min`,"Duration"],["1 Only","Attempt"]].map(([val,label]) => (
+              <div key={label} className="bg-white p-6 text-center">
+                <p className="text-2xl font-light mb-1">{val}</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</p>
+              </div>
+            ))}
           </div>
 
-          <div className="note-instructions">
-            <h3>📌 Instructions</h3>
-            <ul>
-              <li>Read each question carefully before answering.</li>
-              <li>Each question has only one correct answer (A, B, C, or D).</li>
-              <li><strong>Do not reload the page</strong> — the exam will auto-submit if time runs out.</li>
-              <li>You can navigate between questions using the question panel.</li>
-              <li>Click <strong>Submit</strong> on the last question when done.</li>
-              <li>Once submitted, you cannot change your answers.</li>
+          <div className="border border-zinc-100 p-6 mb-10">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-4">Instructions</p>
+            <ul className="flex flex-col gap-2">
+              {[
+                "Read each question carefully before answering",
+                "Each question has only one correct answer",
+                "Do not reload the page — exam will auto-submit",
+                "Navigate between questions using the question panel",
+                "Click Submit on the last question when done",
+                "Once submitted, you cannot change your answers"
+              ].map((item, i) => (
+                <li key={i} className="flex gap-3 text-sm text-zinc-600">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-300 mt-0.5 shrink-0">{String(i+1).padStart(2,"0")}</span>
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
 
-          {error && <div className="error-box" style={{marginBottom:"1rem"}}>{error}</div>}
+          {error && <p className="text-[10px] uppercase tracking-[0.2em] text-red-500 mb-6 text-center">{error}</p>}
 
-          <button onClick={handleStart} className="btn-primary btn-large" disabled={loading}>
+          <button onClick={handleStart} disabled={loading}
+            className="w-full bg-black text-white text-[10px] uppercase tracking-widest py-4 hover:bg-zinc-800 transition-all disabled:opacity-50">
             {loading ? "Starting..." : "Start Exam →"}
           </button>
         </div>

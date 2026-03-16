@@ -5,97 +5,112 @@ import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
 
 export default function ScoreLeaderboard() {
-  const { id }   = useParams()
+  const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
-
-  const [score,  setScore]  = useState(null)
-  const [board,  setBoard]  = useState([])
-  const [exam,   setExam]   = useState(null)
-  const [tab,    setTab]    = useState("score")
+  const [score, setScore] = useState(null)
+  const [board, setBoard] = useState([])
+  const [exam, setExam] = useState(null)
+  const [tab, setTab] = useState("score")
   const [missed, setMissed] = useState(false)
 
   useEffect(() => {
     getExam(id).then(r => setExam(r.data))
     getLeaderboard(id).then(r => setBoard(r.data))
-    getMyScore(id)
-      .then(r => setScore(r.data))
-      .catch(() => setMissed(true))
+    getMyScore(id).then(r => setScore(r.data)).catch(() => setMissed(true))
   }, [id])
 
   const medals = ["🥇","🥈","🥉"]
   const myEntry = board.find(e => e.student_id === user?.id)
-
-  const pct    = score ? ((score.score / score.total_marks) * 100).toFixed(1) : 0
+  const pct = score ? ((score.score / score.total_marks) * 100).toFixed(1) : 0
   const passed = pct >= 60
 
   return (
-    <div className="page">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="container narrow">
-        <div className="page-header flex-between">
-          <div><h1>{exam?.title}</h1></div>
-          <Link to="/student" className="btn-outline">← Dashboard</Link>
-        </div>
-
-        <div className="tabs">
-          <button className={`tab ${tab === "score" ? "active" : ""}`} onClick={() => setTab("score")}>My Score</button>
-          <button className={`tab ${tab === "board" ? "active" : ""}`} onClick={() => setTab("board")}>Leaderboard</button>
-        </div>
-
-        {tab === "score" && (
-          missed ? (
-            <div className="missed-card">
-              <span>😔</span>
-              <h2>Oops! You have missed the timing</h2>
-              <p>The exam window has closed and you did not submit.</p>
-              <button onClick={() => setTab("board")} className="btn-outline">View Leaderboard</button>
+      <div className="max-w-7xl mx-auto px-8 py-12">
+        <div className="max-w-2xl">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2">{exam?.title}</p>
+              <h1 className="text-4xl font-light uppercase tracking-[0.2em]">Results</h1>
             </div>
-          ) : score ? (
-            <div className="score-card">
-              <div className={`score-circle ${passed ? "pass" : "fail"}`}>
-                <span className="score-pct">{pct}%</span>
-                <span className="score-label">{passed ? "Passed ✓" : "Failed ✗"}</span>
+            <Link to="/student" className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
+              ← Dashboard
+            </Link>
+          </div>
+
+          <div className="flex gap-0 border-b border-zinc-100 mb-8">
+            {["score","board"].map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`text-[10px] uppercase tracking-[0.2em] px-6 py-3 border-b-2 -mb-px transition-colors ${tab === t ? "border-black text-black" : "border-transparent text-zinc-400 hover:text-black"}`}>
+                {t === "score" ? "My Score" : "Leaderboard"}
+              </button>
+            ))}
+          </div>
+
+          {tab === "score" && (
+            missed ? (
+              <div className="border border-zinc-100 py-16 text-center">
+                <p className="text-4xl mb-4">😔</p>
+                <h2 className="text-xl font-light uppercase tracking-[0.2em] mb-2">Missed the timing</h2>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-8">The exam window has closed</p>
+                <button onClick={() => setTab("board")}
+                  className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
+                  View Leaderboard
+                </button>
               </div>
-              <h2>{exam?.title}</h2>
-              <div className="score-stats">
-                <div className="score-stat"><h3>{score.score}</h3><p>Your Score</p></div>
-                <div className="score-stat"><h3>{score.total_marks}</h3><p>Total</p></div>
-                <div className="score-stat"><h3>{pct}%</h3><p>Percentage</p></div>
+            ) : score ? (
+              <div className="border border-zinc-100 p-10">
+                <div className="text-center mb-10">
+                  <p className={`text-6xl font-light mb-2 ${passed ? "text-black" : "text-zinc-300"}`}>{pct}%</p>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400">{passed ? "Passed" : "Failed"}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-px bg-zinc-100 mb-8">
+                  {[[score.score,"Your Score"],[score.total_marks,"Total"],[`${pct}%`,"Percentage"]].map(([val,label]) => (
+                    <div key={label} className="bg-white p-6 text-center">
+                      <p className="text-2xl font-light mb-1">{val}</p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{label}</p>
+                    </div>
+                  ))}
+                </div>
+                {myEntry && (
+                  <p className="text-center text-[10px] uppercase tracking-[0.2em] text-zinc-500 border border-zinc-100 py-4">
+                    Ranked <span className="text-black font-medium">#{myEntry.rank}</span> out of <span className="text-black font-medium">{board.length}</span> students
+                  </p>
+                )}
               </div>
-              {myEntry && (
-                <div className="rank-banner">
-                  You have been ranked <strong>#{myEntry.rank}</strong> out of <strong>{board.length}</strong> students
-                </div>
-              )}
-              <p className="muted">Submitted: {score.submitted_at ? new Date(score.submitted_at).toLocaleString() : "—"}</p>
-            </div>
-          ) : <div className="loading">Loading score...</div>
-        )}
+            ) : <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading score...</p>
+          )}
 
-        {tab === "board" && (
-          board.length === 0 ? (
-            <div className="empty-state"><span>🏆</span><h3>No submissions yet</h3></div>
-          ) : (
-            <div className="leaderboard">
-              {board.map(entry => (
-                <div key={entry.student_id}
-                  className={`leaderboard-row rank-${entry.rank <= 3 ? entry.rank : "other"} ${entry.student_id === user?.id ? "my-row" : ""}`}>
-                  <span className="rank-badge">{entry.rank <= 3 ? medals[entry.rank-1] : `#${entry.rank}`}</span>
-                  <div className="lb-info">
-                    <strong>{entry.username}</strong>
-                    {entry.student_id === user?.id && <span className="you-tag">You</span>}
-                    <span className="muted">{entry.time_taken}</span>
+          {tab === "board" && (
+            board.length === 0 ? (
+              <div className="border border-zinc-100 py-16 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">No submissions yet</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {board.map(entry => (
+                  <div key={entry.student_id}
+                    className={`flex items-center gap-6 px-6 py-4 border transition-colors ${entry.student_id === user?.id ? "border-black" : "border-zinc-100 hover:border-zinc-200"}`}>
+                    <span className="text-lg w-8 text-center">{entry.rank <= 3 ? medals[entry.rank-1] : `#${entry.rank}`}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium flex items-center gap-2">
+                        {entry.username}
+                        {entry.student_id === user?.id && <span className="text-[10px] uppercase tracking-[0.2em] bg-black text-white px-2 py-0.5">You</span>}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{entry.time_taken}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{entry.score}/{entry.total_marks}</p>
+                      <p className={`text-[10px] uppercase tracking-[0.2em] ${entry.percentage >= 60 ? "text-black" : "text-zinc-400"}`}>{entry.percentage}%</p>
+                    </div>
                   </div>
-                  <div className="lb-score">
-                    <span>{entry.score}/{entry.total_marks}</span>
-                    <span className={`badge ${entry.percentage >= 60 ? "badge-success" : "badge-danger"}`}>{entry.percentage}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   )
