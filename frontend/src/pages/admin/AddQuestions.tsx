@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { addQuestions, getExam } from "../../services/adminService"
 import Navbar from "../../components/Navbar"
-import { Exam, QuestionDraft } from "../../types"
+import { Exam, QuestionDraft } from "../../../types"
 
 const emptyQuestion = (): QuestionDraft => ({
   question_text: "", option_a: "", option_b: "",

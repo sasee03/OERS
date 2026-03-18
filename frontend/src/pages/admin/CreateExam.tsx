@@ -8,11 +8,18 @@ interface FormState {
   total_questions: string
   start_time: string
   end_time: string
+  duration_minutes: string
 }
 
 export default function CreateExam() {
   const navigate = useNavigate()
-  const [form, setForm]       = useState<FormState>({ title: "", total_questions: "", start_time: "", end_time: "" })
+  const [form, setForm] = useState<FormState>({
+    title: "",
+    total_questions: "",
+    start_time: "",
+    end_time: "",
+    duration_minutes: ""
+  })
   const [error, setError]     = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -23,10 +30,11 @@ export default function CreateExam() {
     e.preventDefault(); setLoading(true); setError("")
     try {
       const payload = {
-        title: form.title,
-        total_questions: parseInt(form.total_questions),
-        start_time: new Date(form.start_time).toISOString(),
-        end_time:   new Date(form.end_time).toISOString(),
+        title:            form.title,
+        total_questions:  parseInt(form.total_questions),
+        start_time:       new Date(form.start_time).toISOString(),
+        end_time:         new Date(form.end_time).toISOString(),
+        duration_minutes: parseInt(form.duration_minutes),
       }
       const { data } = await createExam(payload)
       navigate(`/admin/exams/${data.id}/questions`)
@@ -53,23 +61,44 @@ export default function CreateExam() {
                 placeholder="e.g. Python Programming Basics"
                 className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
             </div>
+
             <div className="flex flex-col gap-2">
               <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Number of Questions</label>
-              <input name="total_questions" type="number" min="1" value={form.total_questions} onChange={handleChange} required
-                placeholder="e.g. 10"
+              <input name="total_questions" type="number" min="1" value={form.total_questions}
+                onChange={handleChange} required placeholder="e.g. 10"
                 className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
             </div>
+
             <div className="grid grid-cols-2 gap-6">
-              {(["start_time","end_time"] as const).map(name => (
-                <div key={name} className="flex flex-col gap-2">
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">
-                    {name === "start_time" ? "Start Time" : "End Time"}
-                  </label>
-                  <input name={name} type="datetime-local" value={form[name]} onChange={handleChange} required
-                    className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
-                </div>
-              ))}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Window Opens</label>
+                <input name="start_time" type="datetime-local" value={form.start_time}
+                  onChange={handleChange} required
+                  className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Window Closes</label>
+                <input name="end_time" type="datetime-local" value={form.end_time}
+                  onChange={handleChange} required
+                  className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+              </div>
             </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+                Exam Duration (minutes)
+              </label>
+              <input name="duration_minutes" type="number" min="1" value={form.duration_minutes}
+                onChange={handleChange} required placeholder="e.g. 60"
+                className="border-b border-black bg-transparent py-2 text-sm focus:outline-none focus:border-zinc-400 transition-colors" />
+              {form.duration_minutes && form.end_time && (
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mt-1">
+                  Students get {form.duration_minutes} min from when they start.
+                  Window closes {new Date(form.end_time).toLocaleString()}.
+                </p>
+              )}
+            </div>
+
             <div className="flex gap-4 pt-4">
               <button type="button" onClick={() => navigate("/admin")}
                 className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">

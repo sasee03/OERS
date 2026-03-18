@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getLeaderboard, getExam } from "../../services/adminService"
 import Navbar from "../../components/Navbar"
-import { Exam, LeaderboardEntry } from "../../types"
+import { Exam, LeaderboardEntry } from "../../../types"
 
 export default function AdminLeaderboard() {
   const { id }   = useParams<{ id: string }>()

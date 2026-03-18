@@ -9,13 +9,16 @@ class ExamCreate(BaseModel):
     total_questions: int
     start_time:      datetime
     end_time:        datetime
-
+    duration_minutes: int
 
 class ExamUpdate(BaseModel):
     """Body for PUT /api/admin/exams/{id} — all fields optional"""
-    title:           Optional[str]      = None
-    end_time:        Optional[datetime] = None   # extend the date
-    is_active:       Optional[bool]     = None
+    title: Optional[str] = None
+    total_questions: Optional[int] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration_minutes: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
 class ExamOut(BaseModel):
@@ -24,6 +27,7 @@ class ExamOut(BaseModel):
     total_questions: int
     start_time:      datetime
     end_time:        datetime
+    duration_minutes: int
     created_by:      int
     is_active:       bool
     created_at:      datetime

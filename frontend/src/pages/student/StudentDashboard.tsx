@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext"
 import { getActiveExams, getScheduledExams, getMyResults, searchExams } from "../../services/studentService"
 import Navbar from "../../components/Navbar"
 import ExamCard from "../../components/ExamCard"
-import { Exam, Submission } from "../../types"
+import { Exam, Submission } from "../../../types"
 
 export default function StudentDashboard() {
   const { user }                        = useAuth()
@@ -21,7 +21,7 @@ export default function StudentDashboard() {
       })
   }, [])
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!query.trim()) { setSearched(null); return }
     const { data } = await searchExams(query); setSearched(data)
@@ -77,7 +77,6 @@ export default function StudentDashboard() {
                 </div>
               )}
             </div>
-
             {!searched && scheduled.length > 0 && (
               <div className="mb-12">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-6">Scheduled Exams</p>

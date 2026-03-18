@@ -4,7 +4,7 @@ import { getExams, deleteExam, searchExams } from "../../services/adminService"
 import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
 import ExamCard from "../../components/ExamCard"
-import { Exam } from "../../types"
+import { Exam } from "../../../types"
 
 export default function AdminDashboard() {
   const { user }                    = useAuth()
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   const fetchExams = async () => { const { data } = await getExams(); setExams(data); setLoading(false) }
   useEffect(() => { fetchExams() }, [])
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!query.trim()) { fetchExams(); return }
     const { data } = await searchExams(query); setExams(data)

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Exam } from "../types"
+import { Exam } from "../../types"
 
 interface Props {
   exam: Exam

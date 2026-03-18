@@ -12,7 +12,7 @@ from repositories.assignment_repository import is_student_assigned
 from repositories.exam_repository import get_exam_by_id
 from repositories.user_repository import get_user_by_id
 from schemas.submission_schema import SubmitExam, LeaderboardEntry
-
+from datetime import timedelta
 
 def service_start_exam(db: Session, exam_id: int, student_id: int,
                         student_email: str):
@@ -56,7 +56,11 @@ def service_start_exam(db: Session, exam_id: int, student_id: int,
 
     return create_submission(db, exam_id, student_id)
 
-
+def get_student_deadline(exam, submission):
+    """Returns the actual deadline for this student's attempt."""
+    personal_deadline = submission.started_at + timedelta(minutes=exam.duration_minutes)
+    return min(personal_deadline, exam.end_time)
+    
 def service_submit_exam(db: Session, exam_id: int,
                          student_id: int, data: SubmitExam):
     """
@@ -96,16 +100,23 @@ def service_submit_exam(db: Session, exam_id: int,
 def service_get_leaderboard(db: Session,
                              exam_id: int) -> list[LeaderboardEntry]:
     exam = get_exam_by_id(db, exam_id)
+    submission = get_submission(db, exam_id, 0) 
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
-
+    if not submission:
+        raise HTTPException(status_code=404, detail="Exam not started")
+    if submission.is_completed :
+        raise HTTPException(status_code=400, detail="Already submitted")
     submissions = get_submissions_by_exam(db, exam_id)
     leaderboard = []
 
     for rank, sub in enumerate(submissions, start=1):
         student    = get_user_by_id(db, sub.student_id)
         percentage = (sub.score / sub.total_marks * 100) if sub.total_marks else 0
-
+        personal_deadline = submission.started_at + timedelta(minutes=exam.duration_minutes)
+        actual_deadline = min(personal_deadline, exam.end_time)
+        if datetime.now(timezone.utc) > actual_deadline:
+            pass
         # Calculate time taken
         if sub.submitted_at and sub.started_at:
             delta   = sub.submitted_at - sub.started_at

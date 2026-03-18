@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import { getMyScore, getLeaderboard, getExam } from "../../services/studentService"
 import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
-import { Exam, Submission, LeaderboardEntry } from "../../types"
+import { Exam, Submission, LeaderboardEntry } from "../../../types"
 
 export default function ScoreLeaderboard() {
   const { id }   = useParams<{ id: string }>()

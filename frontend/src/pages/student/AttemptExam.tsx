@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { getExam, getQuestions, submitExam } from "../../services/studentService"
+import { getExam, getQuestions, submitExam, getMyScore,getSubmission } from "../../services/studentService"
 import Navbar from "../../components/Navbar"
-import { Exam, Question } from "../../types"
+import { Exam, Question } from "../../../types"
 
 export default function AttemptExam() {
   const { id }   = useParams<{ id: string }>()
@@ -15,7 +15,13 @@ export default function AttemptExam() {
   const [timeLeft,   setTimeLeft]   = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState("")
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const answersRef  = useRef<Record<number, string>>({})
+
+  // Keep answersRef in sync so beforeunload can access latest answers
+  useEffect(() => {
+    answersRef.current = answers
+  }, [answers])
 
   const handleSubmit = useCallback(async (auto = false) => {
     if (submitting) return
@@ -26,6 +32,7 @@ export default function AttemptExam() {
       const payload: Record<number, string> = {}
       questions.forEach(q => { if (answers[q.id]) payload[q.id] = answers[q.id] })
       await submitExam(id!, { answers: payload })
+      localStorage.removeItem(`exam_answers_${id}`)
       navigate(`/student/exams/${id}/score`)
     } catch (err: unknown) {
       const d = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
@@ -34,16 +41,53 @@ export default function AttemptExam() {
     }
   }, [submitting, answers, questions, id, navigate])
 
+  // Save answers to localStorage on every change
   useEffect(() => {
-    Promise.all([getExam(id!), getQuestions(id!)])
-      .then(([e, q]) => {
-        setExam(e.data); setQuestions(q.data)
-        setTimeLeft(Math.max(0, Math.floor((new Date(e.data.end_time).getTime() - Date.now()) / 1000)))
-      })
-      .catch(() => navigate("/student"))
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [id])
+    if (Object.keys(answers).length > 0) {
+      localStorage.setItem(`exam_answers_${id}`, JSON.stringify(answers))
+    }
+  }, [answers, id])
 
+  // Warn user before reload/close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = "Your exam is in progress. If you leave, your current answers are saved and timer continues."
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [])
+
+useEffect(() => {
+  Promise.all([getExam(id!), getQuestions(id!)])
+    .then(([e, q]) => {
+      setExam(e.data)
+      setQuestions(q.data)
+
+      // Restore saved answers if student reloaded
+      const saved = localStorage.getItem(`exam_answers_${id}`)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setAnswers(parsed)
+        answersRef.current = parsed
+      }
+      getSubmission(id!)
+        .then(sub => {
+          const examEndTime    = new Date(e.data.end_time).getTime()
+          const personalEnd    = new Date(sub.data.started_at).getTime() + (e.data.duration_minutes * 60 * 1000)
+          const actualDeadline = Math.min(examEndTime, personalEnd)
+          setTimeLeft(Math.max(0, Math.floor((actualDeadline - Date.now()) / 1000)))
+        })
+        .catch(() => {
+          const examEndTime = new Date(e.data.end_time).getTime()
+          setTimeLeft(Math.max(0, Math.floor((examEndTime - Date.now()) / 1000)))
+        })
+    })
+    .catch(() => navigate("/student"))
+  return () => { if (timerRef.current) clearInterval(timerRef.current) }
+}, [id])
+      
+  // Countdown timer — auto-submits when timeLeft hits 0
   useEffect(() => {
     if (timeLeft === null) return
     if (timeLeft <= 0) { handleSubmit(true); return }

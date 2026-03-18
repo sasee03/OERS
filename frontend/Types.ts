@@ -11,6 +11,7 @@ export interface Exam {
   total_questions: number
   start_time: string
   end_time: string
+  duration_minutes: number
   created_by: number
   is_active: boolean
   created_at: string

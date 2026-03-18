@@ -1,11 +1,12 @@
 import api from "../utils/api"
-import { Exam, Question, QuestionDraft, Assignment, AssignResult, LeaderboardEntry, Submission, User } from "../types"
+import { Exam, Question, QuestionDraft, Assignment, AssignResult, LeaderboardEntry, Submission, User } from "../../types"
 
 export interface ExamPayload {
   title: string
   total_questions: number
   start_time: string
   end_time: string
+  duration_minutes: number
 }
 
 export interface BulkQuestionsPayload {
@@ -21,12 +22,12 @@ export interface CorrectAnswerPayload {
 }
 
 // Exams
-export const createExam   = (data: ExamPayload)           => api.post<Exam>("/api/admin/exams", data)
-export const getExams     = ()                            => api.get<Exam[]>("/api/admin/exams")
-export const searchExams  = (q: string)                  => api.get<Exam[]>(`/api/admin/exams/search?q=${q}`)
-export const getExam      = (id: number | string)        => api.get<Exam>(`/api/admin/exams/${id}`)
+export const createExam   = (data: ExamPayload)                                          => api.post<Exam>("/api/admin/exams", data)
+export const getExams     = ()                                                            => api.get<Exam[]>("/api/admin/exams")
+export const searchExams  = (q: string)                                                  => api.get<Exam[]>(`/api/admin/exams/search?q=${q}`)
+export const getExam      = (id: number | string)                                        => api.get<Exam>(`/api/admin/exams/${id}`)
 export const updateExam   = (id: number | string, data: Partial<ExamPayload> & { is_active?: boolean }) => api.put<Exam>(`/api/admin/exams/${id}`, data)
-export const deleteExam   = (id: number | string)        => api.delete(`/api/admin/exams/${id}`)
+export const deleteExam   = (id: number | string)                                        => api.delete(`/api/admin/exams/${id}`)
 
 // Questions
 export const addQuestions        = (examId: number | string, data: BulkQuestionsPayload) => api.post<Question[]>(`/api/admin/exams/${examId}/questions`, data)
@@ -38,6 +39,6 @@ export const assignExam    = (examId: number | string, data: AssignPayload) => a
 export const getCandidates = (examId: number | string)                      => api.get<Assignment[]>(`/api/admin/exams/${examId}/candidates`)
 
 // Results
-export const getAllResults   = ()                      => api.get<Submission[]>("/api/admin/results")
-export const getLeaderboard = (examId: number | string) => api.get<LeaderboardEntry[]>(`/api/admin/exams/${examId}/leaderboard`)
-export const getStudents    = ()                      => api.get<User[]>("/api/admin/students")
+export const getAllResults   = ()                         => api.get<Submission[]>("/api/admin/results")
+export const getLeaderboard = (examId: number | string)  => api.get<LeaderboardEntry[]>(`/api/admin/exams/${examId}/leaderboard`)
+export const getStudents    = ()                         => api.get<User[]>("/api/admin/students")

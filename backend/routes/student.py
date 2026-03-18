@@ -91,7 +91,7 @@ def submit_exam(exam_id: int, data: SubmitExam,
 
 # ── Results ───────────────────────────────────────────────────
 
-@router.get("/exams/{exam_id}/score",
+@router.get("/exams/{exam_id}/submission",
             response_model=SubmissionOut)
 def my_score(exam_id: int, db: Session = Depends(get_db),
              student=Depends(require_student)):

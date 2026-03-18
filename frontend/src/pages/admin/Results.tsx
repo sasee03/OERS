@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { getAllResults } from "../../services/adminService"
 import Navbar from "../../components/Navbar"
-import { Submission } from "../../types"
+import { Submission } from "../../../types"
 
 export default function Results() {
   const [results, setResults] = useState<Submission[]>([])

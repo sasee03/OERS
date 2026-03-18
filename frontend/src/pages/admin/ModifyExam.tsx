@@ -5,7 +5,7 @@ import {
   getQuestions, updateCorrectAnswer
 } from "../../services/adminService"
 import Navbar from "../../components/Navbar"
-import { Exam, Question, Assignment } from "../../types"
+import { Exam, Question, Assignment } from "../../../types"
 
 type Tab = "details" | "assign" | "questions" | "candidates"
 

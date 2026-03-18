@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getExam, startExam } from "../../services/studentService"
 import Navbar from "../../components/Navbar"
-import { Exam } from "../../types"
+import { Exam } from "../../../types"
 
 export default function ExamNote() {
   const { id }   = useParams<{ id: string }>()
@@ -34,8 +34,7 @@ export default function ExamNote() {
     </div>
   )
 
-  const duration = Math.round((new Date(exam.end_time).getTime() - new Date(exam.start_time).getTime()) / 60000)
-
+  const duration = exam.duration_minutes
   const instructions = [
     "Read each question carefully before answering",
     "Each question has only one correct answer",

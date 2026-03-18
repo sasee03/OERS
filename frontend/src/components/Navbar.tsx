@@ -39,15 +39,6 @@ export default function Navbar({ minimal = false }: Props) {
           </div>
         )}
 
-        {!minimal && user?.role === "student" && (
-          <div className="flex gap-6">
-            <Link to="/student"
-              className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors">
-              My Exams
-            </Link>
-          </div>
-        )}
-
         {user && (
           <div className="flex items-center gap-4">
             <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">{user.username}</span>

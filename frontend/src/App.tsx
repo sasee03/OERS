@@ -13,10 +13,12 @@ import AdminLeaderboard from "./pages/admin/AdminLeaderboard"
 import Results          from "./pages/admin/Results"
 import Students         from "./pages/admin/Students"
 
+
 import StudentDashboard from "./pages/student/StudentDashboard"
 import ExamNote         from "./pages/student/ExamNote"
 import AttemptExam      from "./pages/student/AttemptExam"
 import ScoreLeaderboard from "./pages/student/ScoreLeaderboard"
+import AdminExams from "./pages/admin/AdminExam"
 
 export default function App() {
   return (
@@ -28,6 +30,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           <Route path="/admin"                          element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/exams"                    element={<ProtectedRoute role="admin"><AdminExams /></ProtectedRoute>} />
           <Route path="/admin/exams/create"             element={<ProtectedRoute role="admin"><CreateExam /></ProtectedRoute>} />
           <Route path="/admin/exams/:id/questions"      element={<ProtectedRoute role="admin"><AddQuestions /></ProtectedRoute>} />
           <Route path="/admin/exams/:id/modify"         element={<ProtectedRoute role="admin"><ModifyExam /></ProtectedRoute>} />

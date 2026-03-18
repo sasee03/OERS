@@ -24,7 +24,7 @@ class Exam(Base):
     created_by       = Column(Integer, ForeignKey("users.id"), nullable=False)
     is_active        = Column(Boolean, default=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
-
+    duration_minutes = Column(Integer, nullable=False, default=60)
     # relationships
     questions   = relationship("Question",       back_populates="exam", cascade="all, delete-orphan")
     assignments = relationship("ExamAssignment", back_populates="exam", cascade="all, delete-orphan")
