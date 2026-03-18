@@ -2,8 +2,9 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   getExam, updateExam, assignExam, getCandidates,
-  getQuestions, updateCorrectAnswer
+  getQuestions, updateCorrectAnswer, updateQuestion
 } from "../../services/adminService"
+import { sendExamAssignmentEmail } from "../../services/emailService"
 import Navbar from "../../components/Navbar"
 import { Exam, Question, Assignment } from "../../../types"
 
@@ -19,12 +20,19 @@ export default function ModifyExam() {
   const [tab,        setTab]        = useState<Tab>("details")
   const [emails,     setEmails]     = useState("")
   const [newEndTime, setNewEndTime] = useState("")
+  const [newDuration, setNewDuration] = useState("")
   const [answerEdit, setAnswerEdit] = useState<Record<number, string>>({})
+  const [questionEdit, setQuestionEdit] = useState<Record<number, Partial<Question>>>({})
+  const [editingQId, setEditingQId] = useState<number | null>(null)
   const [msg,        setMsg]        = useState("")
   const [error,      setError]      = useState("")
 
   useEffect(() => {
-    getExam(id!).then(r => { setExam(r.data); setNewEndTime(r.data.end_time?.slice(0, 16)) })
+    getExam(id!).then(r => {
+      setExam(r.data)
+      setNewEndTime(r.data.end_time?.slice(0, 16))
+      setNewDuration(String(r.data.duration_minutes ?? 60))
+    })
     getQuestions(id!).then(r => setQuestions(r.data))
     getCandidates(id!).then(r => setCandidates(r.data))
   }, [id])
@@ -33,6 +41,40 @@ export default function ModifyExam() {
     setMsg(""); setError("")
     try { await updateExam(id!, { end_time: new Date(newEndTime).toISOString() }); setMsg("End time updated!") }
     catch { setError("Failed to update end time") }
+  }
+
+  const handleUpdateDuration = async () => {
+    setMsg(""); setError("")
+    const mins = parseInt(newDuration, 10)
+    if (isNaN(mins) || mins < 1) { setError("Duration must be at least 1 minute"); return }
+    try { await updateExam(id!, { duration_minutes: mins }); setMsg("Duration updated!"); getExam(id!).then(r => setExam(r.data)) }
+    catch { setError("Failed to update duration") }
+  }
+
+  const startEditQuestion = (q: Question) => {
+    setQuestionEdit({ ...questionEdit, [q.id]: { ...q } })
+    setEditingQId(q.id)
+  }
+
+  const handleUpdateQuestion = async (qId: number) => {
+    setMsg(""); setError("")
+    const ed = questionEdit[qId]
+    if (!ed || !ed.question_text || !ed.option_a || !ed.option_b || !ed.option_c || !ed.option_d) {
+      setError("All fields required"); return
+    }
+    try {
+      await updateQuestion(qId, {
+        question_text: ed.question_text,
+        option_a: ed.option_a,
+        option_b: ed.option_b,
+        option_c: ed.option_c,
+        option_d: ed.option_d,
+        correct_answer: ed.correct_answer || "A",
+      })
+      setMsg("Question updated!")
+      setEditingQId(null)
+      getQuestions(id!).then(r => setQuestions(r.data))
+    } catch { setError("Failed to update question") }
   }
 
   const handleAssign = async () => {
@@ -44,6 +86,22 @@ export default function ModifyExam() {
       setMsg(data.map(r => `${r.email}: ${r.status}`).join(" | "))
       setEmails("")
       getCandidates(id!).then(r => setCandidates(r.data))
+      // Send email notification to each assigned student
+      if (exam) {
+        const startStr = new Date(exam.start_time).toLocaleString()
+        const endStr = new Date(exam.end_time).toLocaleString()
+        const assignedEmails = data.filter(r => r.status === "assigned").map(r => r.email)
+        for (const email of assignedEmails) {
+          sendExamAssignmentEmail({
+            to_email: email,
+            exam_title: exam.title,
+            start_time: startStr,
+            end_time: endStr,
+            duration_minutes: exam.duration_minutes,
+            total_questions: exam.total_questions,
+          }).catch(() => {})
+        }
+      }
     } catch { setError("Failed to assign students") }
   }
 
@@ -88,8 +146,8 @@ export default function ModifyExam() {
               {exam.is_active ? "End Exam" : "Reactivate"}
             </button>
             <button onClick={() => navigate("/admin")}
-              className="text-[10px] uppercase tracking-widest border border-zinc-200 px-6 py-3 hover:border-black transition-all">
-              ← Back
+              className="bg-black text-white text-[10px] uppercase tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
+              Save & Go to Dashboard
             </button>
           </div>
         </div>
@@ -120,8 +178,23 @@ export default function ModifyExam() {
               </div>
               <button onClick={handleExtendDate}
                 className="bg-black text-white text-[10px] uppercase tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all w-fit">
-                Update
+                Update End Time
               </button>
+
+              <div className="pt-8 border-t border-zinc-100">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-2">
+                  Exam Duration (minutes per student)
+                </p>
+                <div className="flex gap-4 items-center">
+                  <input type="number" min={1} value={newDuration}
+                    onChange={e => setNewDuration(e.target.value)}
+                    className="w-24 border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
+                  <button onClick={handleUpdateDuration}
+                    className="bg-black text-white text-[10px] uppercase tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
+                    Update Duration
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -146,34 +219,75 @@ export default function ModifyExam() {
           {tab === "questions" && (
             <div className="flex flex-col gap-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-2">
-                Changing correct answer only affects future submissions
+                Click Edit to modify question text and options. Changing correct answer only affects future submissions.
               </p>
               {questions.map((q, i) => (
                 <div key={q.id} className="border border-zinc-100 p-6">
-                  <div className="flex gap-4 mb-4">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 w-6 shrink-0 mt-0.5">Q{i + 1}</span>
-                    <p className="text-sm leading-relaxed">{q.question_text}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-4 ml-10">
-                    {(["a","b","c","d"] as const).map(opt => (
-                      <span key={opt}
-                        className={`text-[10px] uppercase tracking-[0.2em] px-3 py-1 ${q.correct_answer === opt.toUpperCase() ? "bg-black text-white" : "border border-zinc-100 text-zinc-500"}`}>
-                        {opt.toUpperCase()}: {q[`option_${opt}` as keyof Question] as string}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-4 ml-10">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Correct:</span>
-                    <select value={answerEdit[q.id] || q.correct_answer || "A"}
-                      onChange={e => setAnswerEdit({ ...answerEdit, [q.id]: e.target.value })}
-                      className="border-b border-black bg-transparent text-sm py-1 focus:outline-none">
-                      {["A","B","C","D"].map(o => <option key={o}>{o}</option>)}
-                    </select>
-                    <button onClick={() => handleUpdateAnswer(q.id)}
-                      className="text-[10px] uppercase tracking-widest border border-zinc-200 px-3 py-1.5 hover:border-black transition-all">
-                      Update
-                    </button>
-                  </div>
+                  {editingQId === q.id ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Question</label>
+                        <textarea value={questionEdit[q.id]?.question_text ?? q.question_text}
+                          onChange={e => setQuestionEdit({ ...questionEdit, [q.id]: { ...questionEdit[q.id], question_text: e.target.value } })}
+                          rows={3} className="border border-zinc-100 p-3 text-sm focus:outline-none focus:border-zinc-400 resize-none" />
+                      </div>
+                      {(["a","b","c","d"] as const).map(opt => (
+                        <div key={opt} className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Option {opt.toUpperCase()}</label>
+                          <input value={questionEdit[q.id]?.[`option_${opt}` as keyof Question] ?? (q[`option_${opt}` as keyof Question] as string)}
+                            onChange={e => setQuestionEdit({ ...questionEdit, [q.id]: { ...questionEdit[q.id], [`option_${opt}`]: e.target.value } })}
+                            className="border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Correct:</span>
+                        <select value={questionEdit[q.id]?.correct_answer ?? q.correct_answer ?? "A"}
+                          onChange={e => setQuestionEdit({ ...questionEdit, [q.id]: { ...questionEdit[q.id], correct_answer: e.target.value } })}
+                          className="border-b border-black bg-transparent text-sm py-1 focus:outline-none">
+                          {["A","B","C","D"].map(o => <option key={o}>{o}</option>)}
+                        </select>
+                        <button onClick={() => handleUpdateQuestion(q.id)}
+                          className="bg-black text-white text-[10px] uppercase tracking-widest px-4 py-2 hover:bg-zinc-800 transition-all">
+                          Save
+                        </button>
+                        <button onClick={() => { setEditingQId(null) }}
+                          className="text-[10px] uppercase tracking-widest border border-zinc-200 px-4 py-2 hover:border-black transition-all">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-4 mb-4">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 w-6 shrink-0 mt-0.5">Q{i + 1}</span>
+                        <p className="text-sm leading-relaxed">{q.question_text}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mb-4 ml-10">
+                        {(["a","b","c","d"] as const).map(opt => (
+                          <span key={opt}
+                            className={`text-[10px] uppercase tracking-[0.2em] px-3 py-1 ${q.correct_answer === opt.toUpperCase() ? "bg-black text-white" : "border border-zinc-100 text-zinc-500"}`}>
+                            {opt.toUpperCase()}: {q[`option_${opt}` as keyof Question] as string}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-4 ml-10">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Correct:</span>
+                        <select value={answerEdit[q.id] || q.correct_answer || "A"}
+                          onChange={e => setAnswerEdit({ ...answerEdit, [q.id]: e.target.value })}
+                          className="border-b border-black bg-transparent text-sm py-1 focus:outline-none">
+                          {["A","B","C","D"].map(o => <option key={o}>{o}</option>)}
+                        </select>
+                        <button onClick={() => handleUpdateAnswer(q.id)}
+                          className="text-[10px] uppercase tracking-widest border border-zinc-200 px-3 py-1.5 hover:border-black transition-all">
+                          Update Answer
+                        </button>
+                        <button onClick={() => startEditQuestion(q)}
+                          className="text-[10px] uppercase tracking-widest border border-zinc-200 px-3 py-1.5 hover:border-black transition-all">
+                          Edit Question
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

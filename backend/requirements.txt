@@ -2,7 +2,7 @@ fastapi[standard]
 uvicorn 
 sqlalchemy 
 psycopg2-binary 
-python-jose[cryptography] 
+PyJWT 
 passlib[bcrypt]
 bcrypt==3.2.2
 python-dotenv 

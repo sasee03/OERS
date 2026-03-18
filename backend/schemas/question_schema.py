@@ -52,3 +52,20 @@ class CorrectAnswerUpdate(BaseModel):
         if v.upper() not in ("A", "B", "C", "D"):
             raise ValueError("correct_answer must be A, B, C, or D")
         return v.upper()
+
+
+class QuestionUpdate(BaseModel):
+    """Body for PUT /api/admin/questions/{id} — full question edit"""
+    question_text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    correct_answer: str
+
+    @field_validator("correct_answer")
+    @classmethod
+    def must_be_valid(cls, v):
+        if v.upper() not in ("A", "B", "C", "D"):
+            raise ValueError("correct_answer must be A, B, C, or D")
+        return v.upper()

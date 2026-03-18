@@ -39,7 +39,7 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
   }
 
   const getStatusLabel = () => {
-    if (role === "admin") return isLive ? "Active" : isScheduled ? "Scheduled" : "Inactive"
+    if (role === "admin") return isLive ? "Active" : isScheduled ? "Upcoming" : "Inactive"
     if (isAttempted)  return "Attempted"
     if (isLive)       return "Attempt Now"
     if (isPast)       return "Missed"
@@ -97,10 +97,10 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
         {/* ── ADMIN buttons ── */}
         {role === "admin" && (
           <>
-            <Link to={`/admin/exams/${exam.id}/questions`}
+            {/* <Link to={`/admin/exams/${exam.id}/questions`}
               className="text-[10px] uppercase tracking-widest bg-black text-white px-3 py-1.5 rounded hover:bg-zinc-800 transition-all">
               Questions
-            </Link>
+            </Link> */}
             <Link to={`/admin/exams/${exam.id}/modify`}
               className="text-[10px] uppercase tracking-widest border border-zinc-300 px-3 py-1.5 rounded hover:border-black transition-all">
               Modify

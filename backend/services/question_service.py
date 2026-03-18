@@ -3,10 +3,10 @@ from fastapi import HTTPException, status
 
 from repositories.question_repository import (
     bulk_create_questions, get_questions_by_exam,
-    get_question_by_id, update_correct_answer,
+    get_question_by_id, update_correct_answer, update_question,
 )
 from repositories.exam_repository import get_exam_by_id
-from schemas.question_schema import BulkQuestionCreate, CorrectAnswerUpdate
+from schemas.question_schema import BulkQuestionCreate, CorrectAnswerUpdate, QuestionUpdate
 
 
 def service_add_questions(db: Session, exam_id: int,
@@ -47,3 +47,19 @@ def service_update_answer(db: Session, question_id: int,
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
     return update_correct_answer(db, question, data.correct_answer)
+
+
+def service_update_question(db: Session, question_id: int, data: QuestionUpdate):
+    """Admin can edit full question (text, options, correct answer)."""
+    question = get_question_by_id(db, question_id)
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return update_question(
+        db, question,
+        question_text=data.question_text,
+        option_a=data.option_a,
+        option_b=data.option_b,
+        option_c=data.option_c,
+        option_d=data.option_d,
+        correct_answer=data.correct_answer,
+    )

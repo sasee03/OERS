@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { getExams, deleteExam, searchExams } from "../../services/adminService"
 import { useAuth } from "../../context/AuthContext"
@@ -12,14 +12,23 @@ export default function AdminDashboard() {
   const [query, setQuery]           = useState("")
   const [loading, setLoading]       = useState(true)
 
-  const fetchExams = async () => { const { data } = await getExams(); setExams(data); setLoading(false) }
-  useEffect(() => { fetchExams() }, [])
+  const fetchExams = useCallback(async () => {
+    const { data } = await getExams()
+    setExams(data)
+    setLoading(false)
+  }, [])
 
-  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  useEffect(() => { fetchExams() }, [fetchExams])
+
+  // Dynamic search — debounced (300ms)
+  useEffect(() => {
     if (!query.trim()) { fetchExams(); return }
-    const { data } = await searchExams(query); setExams(data)
-  }
+    const t = setTimeout(async () => {
+      const { data } = await searchExams(query)
+      setExams(data)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query, fetchExams])
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this exam?")) return
@@ -54,19 +63,16 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <form onSubmit={handleSearch} className="flex gap-4 mb-12 max-w-lg">
+        <div className="flex gap-4 mb-12 max-w-lg">
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search exams..."
             className="flex-1 border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
-          <button type="submit" className="bg-black text-white text-[10px] uppercase tracking-widest px-4 py-2 hover:bg-zinc-800 transition-all">
-            Search
-          </button>
           {query && (
             <button type="button" onClick={() => { setQuery(""); fetchExams() }}
               className="text-[10px] uppercase tracking-widest border-b border-zinc-300 px-4 py-2 hover:border-black transition-all">
               Clear
             </button>
           )}
-        </form>
+        </div>
 
         {loading ? (
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading...</p>

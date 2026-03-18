@@ -114,12 +114,23 @@ def service_get_leaderboard(db: Session,
         student    = get_user_by_id(db, sub.student_id)
         percentage = (sub.score / sub.total_marks * 100) if sub.total_marks else 0
 
-        # Calculate time taken
+        # Calculate time taken (submitted_at - started_at) using timestamps for timezone safety
         if sub.submitted_at and sub.started_at:
-            delta   = sub.submitted_at - sub.started_at
-            mins    = int(delta.total_seconds() // 60)
-            secs    = int(delta.total_seconds() % 60)
-            time_taken = f"{mins} mins {secs} secs"
+            try:
+                end_ts = sub.submitted_at.timestamp() if sub.submitted_at.tzinfo else sub.submitted_at.replace(tzinfo=timezone.utc).timestamp()
+                start_ts = sub.started_at.timestamp() if sub.started_at.tzinfo else sub.started_at.replace(tzinfo=timezone.utc).timestamp()
+                delta_secs = max(0, end_ts - start_ts)
+            except (AttributeError, OSError):
+                delta_secs = (sub.submitted_at - sub.started_at).total_seconds()
+                delta_secs = max(0, delta_secs)
+            mins = int(delta_secs // 60)
+            secs = int(delta_secs % 60)
+            if mins == 0:
+                time_taken = f"{secs} secs"
+            elif secs == 0:
+                time_taken = f"{mins} mins" if mins != 1 else "1 min"
+            else:
+                time_taken = f"{mins} mins {secs} secs"
         else:
             time_taken = "N/A"
 

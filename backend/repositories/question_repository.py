@@ -33,6 +33,20 @@ def update_correct_answer(db: Session, question: Question,
     return question
 
 
+def update_question(db: Session, question: Question,
+                    question_text: str, option_a: str, option_b: str,
+                    option_c: str, option_d: str, correct_answer: str) -> Question:
+    question.question_text = question_text
+    question.option_a = option_a
+    question.option_b = option_b
+    question.option_c = option_c
+    question.option_d = option_d
+    question.correct_answer = correct_answer
+    db.commit()
+    db.refresh(question)
+    return question
+
+
 def delete_questions_by_exam(db: Session, exam_id: int) -> None:
     db.query(Question).filter(Question.exam_id == exam_id).delete()
     db.commit()

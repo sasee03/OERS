@@ -6,7 +6,7 @@ from database import get_db
 from utils.dependencies import require_admin
 from schemas.exam_schema import ExamCreate, ExamUpdate, ExamOut
 from schemas.question_schema import (
-    BulkQuestionCreate, QuestionOutWithAnswer, CorrectAnswerUpdate,
+    BulkQuestionCreate, QuestionOutWithAnswer, CorrectAnswerUpdate, QuestionUpdate,
 )
 from schemas.assignment_schema import AssignExam, AssignmentOut
 from schemas.submission_schema import LeaderboardEntry
@@ -17,6 +17,7 @@ from services.exam_service import (
 )
 from services.question_service import (
     service_add_questions, service_get_questions, service_update_answer,
+    service_update_question,
 )
 from services.submission_service import (
     service_get_leaderboard, service_get_all_results,
@@ -97,6 +98,15 @@ def update_correct_answer(question_id: int, data: CorrectAnswerUpdate,
     Already submitted scores will NOT change — only future submissions.
     """
     return service_update_answer(db, question_id, data)
+
+
+@router.put("/questions/{question_id}",
+            response_model=QuestionOutWithAnswer)
+def update_question_full(question_id: int, data: QuestionUpdate,
+                         db: Session = Depends(get_db),
+                         admin=Depends(require_admin)):
+    """Edit full question (text, options, correct answer)."""
+    return service_update_question(db, question_id, data)
 
 
 # ── Assign students ───────────────────────────────────────────

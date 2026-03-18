@@ -5,6 +5,8 @@ from repositories.exam_repository import (
     create_exam, get_exam_by_id, get_all_exams,
     search_exams, update_exam, delete_exam,
     get_active_exams, get_scheduled_exams,
+    get_active_exams_for_student, get_scheduled_exams_for_student,
+    search_exams_for_student,
 )
 from schemas.exam_schema import ExamCreate, ExamUpdate
 
@@ -23,6 +25,7 @@ def service_create_exam(db: Session, data: ExamCreate,
         start_time=data.start_time,
         end_time=data.end_time,
         created_by=admin_id,
+        duration_minutes=data.duration_minutes,
     )
 
 
@@ -60,3 +63,15 @@ def service_get_active_exams(db: Session):
 
 def service_get_scheduled_exams(db: Session):
     return get_scheduled_exams(db)
+
+
+def service_get_active_exams_for_student(db: Session, student_email: str):
+    return get_active_exams_for_student(db, student_email)
+
+
+def service_get_scheduled_exams_for_student(db: Session, student_email: str):
+    return get_scheduled_exams_for_student(db, student_email)
+
+
+def service_search_exams_for_student(db: Session, query: str, student_email: str):
+    return search_exams_for_student(db, query, student_email)

@@ -2,14 +2,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from datetime import datetime
 from models.exam_model import Exam
+from models.assignment_model import ExamAssignment
 
 
 def create_exam(db: Session, title: str, total_questions: int,
                 start_time: datetime, end_time: datetime,
-                created_by: int) -> Exam:
+                created_by: int, duration_minutes: int = 60) -> Exam:
     exam = Exam(title=title, total_questions=total_questions,
                 start_time=start_time, end_time=end_time,
-                created_by=created_by)
+                created_by=created_by, duration_minutes=duration_minutes)
     db.add(exam)
     db.commit()
     db.refresh(exam)
@@ -59,3 +60,50 @@ def get_scheduled_exams(db: Session) -> list[Exam]:
         Exam.is_active == True,
         Exam.start_time > now
     ).all()
+
+
+def get_active_exams_for_student(db: Session, student_email: str) -> list[Exam]:
+    """Active exams assigned to this student (by email)."""
+    now = datetime.utcnow()
+    return (
+        db.query(Exam)
+        .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)
+        .filter(
+            Exam.is_active == True,
+            Exam.start_time <= now,
+            Exam.end_time >= now,
+            ExamAssignment.student_email == student_email,
+        )
+        .distinct()
+        .all()
+    )
+
+
+def get_scheduled_exams_for_student(db: Session, student_email: str) -> list[Exam]:
+    """Scheduled exams assigned to this student (by email)."""
+    now = datetime.utcnow()
+    return (
+        db.query(Exam)
+        .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)
+        .filter(
+            Exam.is_active == True,
+            Exam.start_time > now,
+            ExamAssignment.student_email == student_email,
+        )
+        .distinct()
+        .all()
+    )
+
+
+def search_exams_for_student(db: Session, query: str, student_email: str) -> list[Exam]:
+    """Search exams assigned to this student."""
+    return (
+        db.query(Exam)
+        .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)
+        .filter(
+            Exam.title.ilike(f"%{query}%"),
+            ExamAssignment.student_email == student_email,
+        )
+        .distinct()
+        .all()
+    )

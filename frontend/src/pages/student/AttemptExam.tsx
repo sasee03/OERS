@@ -13,15 +13,20 @@ export default function AttemptExam() {
   const [answers,    setAnswers]    = useState<Record<number, string>>({})
   const [current,    setCurrent]    = useState(0)
   const [timeLeft,   setTimeLeft]   = useState<number | null>(null)
+  const [timeSpent,  setTimeSpent]  = useState<number>(0)  // seconds elapsed since started_at
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState("")
-  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null)
-  const answersRef  = useRef<Record<number, string>>({})
+  const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const answersRef     = useRef<Record<number, string>>({})
+  const questionsRef   = useRef<Question[]>([])
+  const redirectingRef = useRef(false)
 
-  // Keep answersRef in sync so beforeunload can access latest answers
   useEffect(() => {
     answersRef.current = answers
   }, [answers])
+  useEffect(() => {
+    questionsRef.current = questions
+  }, [questions])
 
   const handleSubmit = useCallback(async (auto = false) => {
     if (submitting) return
@@ -48,17 +53,46 @@ export default function AttemptExam() {
     }
   }, [answers, id])
 
-  // Warn user before reload/close
+  // Auto-submit on refresh — silent, no dialog; redirect to dashboard after reload
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = "Your exam is in progress. If you leave, your current answers are saved and timer continues."
+    const handleBeforeUnload = () => {
+      const ans = answersRef.current
+      const qs = questionsRef.current
+      if (qs.length > 0 && id) {
+        sessionStorage.setItem("exam_autosubmitted", id)
+        const payload: Record<number, string> = {}
+        qs.forEach(q => { if (ans[q.id]) payload[q.id] = ans[q.id] })
+        const token = localStorage.getItem("token")
+        if (token) {
+          fetch(`http://localhost:8000/api/student/exams/${id}/submit`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ answers: payload }),
+            keepalive: true,
+          }).catch(() => {})
+        }
+      }
     }
     window.addEventListener("beforeunload", handleBeforeUnload)
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
-  }, [])
+  }, [id])
+
+  // Redirect to dashboard if we just autosubmitted on reload
+  useEffect(() => {
+    const autosubmitted = sessionStorage.getItem("exam_autosubmitted")
+    if (autosubmitted === id) {
+      redirectingRef.current = true
+      sessionStorage.removeItem("exam_autosubmitted")
+      localStorage.removeItem(`exam_answers_${id}`)
+      navigate("/student", { replace: true })
+    }
+  }, [id, navigate])
 
 useEffect(() => {
+  if (redirectingRef.current) return
   Promise.all([getExam(id!), getQuestions(id!)])
     .then(([e, q]) => {
       setExam(e.data)
@@ -73,10 +107,12 @@ useEffect(() => {
       }
       getSubmission(id!)
         .then(sub => {
+          const startedAt      = new Date(sub.data.started_at).getTime()
           const examEndTime    = new Date(e.data.end_time).getTime()
-          const personalEnd    = new Date(sub.data.started_at).getTime() + (e.data.duration_minutes * 60 * 1000)
+          const personalEnd    = startedAt + (e.data.duration_minutes * 60 * 1000)
           const actualDeadline = Math.min(examEndTime, personalEnd)
           setTimeLeft(Math.max(0, Math.floor((actualDeadline - Date.now()) / 1000)))
+          setTimeSpent(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)))
         })
         .catch(() => {
           const examEndTime = new Date(e.data.end_time).getTime()
@@ -87,16 +123,26 @@ useEffect(() => {
   return () => { if (timerRef.current) clearInterval(timerRef.current) }
 }, [id])
       
-  // Countdown timer — auto-submits when timeLeft hits 0
+  // Countdown + elapsed timer — auto-submits when timeLeft hits 0
   useEffect(() => {
     if (timeLeft === null) return
     if (timeLeft <= 0) { handleSubmit(true); return }
-    timerRef.current = setInterval(() => setTimeLeft(t => (t ?? 1) - 1), 1000)
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => (t ?? 1) - 1)
+      setTimeSpent(s => s + 1)
+    }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timeLeft])
 
-  const formatTime = (s: number) =>
-    `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`
+  const formatTimeLeft = (s: number) => {
+    const hrs = Math.floor(s / 3600)
+    const mins = Math.floor((s % 3600) / 60)
+    const secs = s % 60
+    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
+  const formatDuration = (s: number) =>
+    `${Math.floor(s / 60)} mins ${s % 60} secs`
 
   if (!exam || questions.length === 0) return (
     <div className="min-h-screen bg-white">
@@ -118,10 +164,18 @@ useEffect(() => {
         {/* Main */}
         <div>
           <div className="flex items-center justify-between border border-zinc-100 px-6 py-4 mb-6">
-            <h2 className="text-sm font-medium">{exam.title}</h2>
-            <span className={`text-lg font-mono font-bold ${warn ? "text-red-500" : "text-black"}`}>
-              {formatTime(timeLeft ?? 0)}
-            </span>
+            <div>
+              <h2 className="text-sm font-medium">{exam.title}</h2>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mt-1">
+                Time spent: {formatDuration(timeSpent)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-1">Time left</p>
+              <span className={`text-lg font-mono font-bold ${warn ? "text-red-500" : "text-black"}`}>
+                {formatTimeLeft(timeLeft ?? 0)}
+              </span>
+            </div>
           </div>
 
           {error && <p className="text-[10px] uppercase tracking-[0.2em] text-red-500 mb-4">{error}</p>}

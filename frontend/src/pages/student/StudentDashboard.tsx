@@ -20,12 +20,16 @@ export default function StudentDashboard() {
         setActive(a.data); setScheduled(s.data); setResults(r.data); setLoading(false)
       })
   }, [])
- 
-  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
+
+  // Dynamic search — debounced (300ms)
+  useEffect(() => {
     if (!query.trim()) { setSearched(null); return }
-    const { data } = await searchExams(query); setSearched(data)
-  }
+    const t = setTimeout(async () => {
+      const { data } = await searchExams(query)
+      setSearched(data)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query])
  
   const submittedIds = new Set(results.filter(r => r.is_completed).map(r => r.exam_id))
   const examsToShow  = searched ?? active
@@ -40,20 +44,16 @@ export default function StudentDashboard() {
           <h1 className="text-4xl font-light uppercase tracking-[0.2em]">{user?.username}</h1>
         </div>
  
-        <form onSubmit={handleSearch} className="flex gap-4 mb-12 max-w-lg">
+        <div className="flex gap-4 mb-12 max-w-lg">
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search exams..."
             className="flex-1 border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
-          <button type="submit"
-            className="bg-black text-white text-[10px] uppercase tracking-widest px-4 py-2 hover:bg-zinc-800 transition-all">
-            Search
-          </button>
-          {searched && (
+          {query && (
             <button type="button" onClick={() => { setSearched(null); setQuery("") }}
               className="text-[10px] uppercase tracking-widest border-b border-zinc-300 px-4 py-2 hover:border-black transition-all">
               Clear
             </button>
           )}
-        </form>
+        </div>
  
         {loading ? (
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading...</p>

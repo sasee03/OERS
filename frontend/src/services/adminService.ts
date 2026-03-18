@@ -21,6 +21,15 @@ export interface CorrectAnswerPayload {
   correct_answer: string
 }
 
+export interface QuestionUpdatePayload {
+  question_text: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+  correct_answer: string
+}
+
 // Exams
 export const createExam   = (data: ExamPayload)                                          => api.post<Exam>("/api/admin/exams", data)
 export const getExams     = ()                                                            => api.get<Exam[]>("/api/admin/exams")
@@ -33,6 +42,7 @@ export const deleteExam   = (id: number | string)                               
 export const addQuestions        = (examId: number | string, data: BulkQuestionsPayload) => api.post<Question[]>(`/api/admin/exams/${examId}/questions`, data)
 export const getQuestions        = (examId: number | string)                             => api.get<Question[]>(`/api/admin/exams/${examId}/questions`)
 export const updateCorrectAnswer = (qId: number | string, data: CorrectAnswerPayload)   => api.patch<Question>(`/api/admin/questions/${qId}/answer`, data)
+export const updateQuestion      = (qId: number | string, data: QuestionUpdatePayload) => api.put<Question>(`/api/admin/questions/${qId}`, data)
 
 // Assign
 export const assignExam    = (examId: number | string, data: AssignPayload) => api.post<AssignResult[]>(`/api/admin/exams/${examId}/assign`, data)

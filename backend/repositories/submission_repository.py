@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from models.submission_model import Submission
 
 
@@ -31,7 +31,7 @@ def complete_submission(db: Session, submission: Submission,
     submission.answers      = answers
     submission.score        = score
     submission.total_marks  = total_marks
-    submission.submitted_at = datetime.utcnow()
+    submission.submitted_at = datetime.now(timezone.utc)
     submission.is_completed = True
     db.commit()
     db.refresh(submission)
