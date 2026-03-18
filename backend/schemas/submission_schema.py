@@ -33,4 +33,3 @@ class LeaderboardEntry(BaseModel):
     total_marks:  int
     percentage:   float
     time_taken:   str          # e.g. "12 mins 34 secs"
-    submitted_at: datetime

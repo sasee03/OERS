@@ -66,3 +66,17 @@ def get_all_submissions(db: Session) -> list[Submission]:
         .filter(Submission.is_completed == True)
         .all()
     )
+
+def get_leaderboard_submissions(db: Session, exam_id: int) -> list[Submission]:
+    return (
+        db.query(Submission)
+        .filter(
+            Submission.exam_id == exam_id,
+            Submission.is_completed == True,
+        )
+        .order_by(
+            Submission.score.desc(),
+            (Submission.submitted_at - Submission.started_at).asc()   # shortest duration first
+        )
+        .all()
+    )

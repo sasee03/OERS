@@ -4,7 +4,7 @@ import { getActiveExams, getScheduledExams, getMyResults, searchExams } from "..
 import Navbar from "../../components/Navbar"
 import ExamCard from "../../components/ExamCard"
 import { Exam, Submission } from "../../../types"
-
+ 
 export default function StudentDashboard() {
   const { user }                        = useAuth()
   const [active,    setActive]          = useState<Exam[]>([])
@@ -13,33 +13,33 @@ export default function StudentDashboard() {
   const [query,     setQuery]           = useState("")
   const [searched,  setSearched]        = useState<Exam[] | null>(null)
   const [loading,   setLoading]         = useState(true)
-
+ 
   useEffect(() => {
     Promise.all([getActiveExams(), getScheduledExams(), getMyResults()])
       .then(([a, s, r]) => {
         setActive(a.data); setScheduled(s.data); setResults(r.data); setLoading(false)
       })
   }, [])
-
+ 
   const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!query.trim()) { setSearched(null); return }
     const { data } = await searchExams(query); setSearched(data)
   }
-
+ 
   const submittedIds = new Set(results.filter(r => r.is_completed).map(r => r.exam_id))
   const examsToShow  = searched ?? active
-
+ 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="max-w-7xl mx-auto px-8 py-12">
-
+ 
         <div className="mb-12">
           <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-2">Hello</p>
           <h1 className="text-4xl font-light uppercase tracking-[0.2em]">{user?.username}</h1>
         </div>
-
+ 
         <form onSubmit={handleSearch} className="flex gap-4 mb-12 max-w-lg">
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search exams..."
             className="flex-1 border-b border-black bg-transparent py-2 text-sm focus:outline-none" />
@@ -54,7 +54,7 @@ export default function StudentDashboard() {
             </button>
           )}
         </form>
-
+ 
         {loading ? (
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400">Loading...</p>
         ) : (
@@ -87,7 +87,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
             )}
-
+ 
             {results.filter(r => r.is_completed).length > 0 && (
               <div>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-400 mb-6">My Results</p>

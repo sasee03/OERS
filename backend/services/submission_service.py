@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 
+from models.submission_model import Submission
 from repositories.submission_repository import (
-    create_submission, get_submission,
+    create_submission, get_leaderboard_submissions, get_submission,
     complete_submission, get_submissions_by_exam,
     get_submissions_by_student, get_all_submissions,
 )
@@ -26,15 +27,16 @@ def service_start_exam(db: Session, exam_id: int, student_id: int,
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
-    now = datetime.now(timezone.utc)
+    IST = timezone(timedelta(hours=5, minutes=30), name="IST")
+    now = datetime.now(IST)
 
     if not exam.is_active:
         raise HTTPException(status_code=400, detail="Exam is no longer active")
 
-    if now < exam.start_time.replace(tzinfo=timezone.utc):
+    if now < exam.start_time:
         raise HTTPException(status_code=400, detail="Exam has not started yet")
 
-    if now > exam.end_time.replace(tzinfo=timezone.utc):
+    if now > exam.end_time:
         raise HTTPException(status_code=400, detail="Exam time is over")
 
     if not is_student_assigned(db, exam_id, student_email):
@@ -100,23 +102,18 @@ def service_submit_exam(db: Session, exam_id: int,
 def service_get_leaderboard(db: Session,
                              exam_id: int) -> list[LeaderboardEntry]:
     exam = get_exam_by_id(db, exam_id)
-    submission = get_submission(db, exam_id, 0) 
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
-    if not submission:
-        raise HTTPException(status_code=404, detail="Exam not started")
-    if submission.is_completed :
-        raise HTTPException(status_code=400, detail="Already submitted")
-    submissions = get_submissions_by_exam(db, exam_id)
+
+    # Get submissions using the repository function
+    submissions = get_leaderboard_submissions(db, exam_id)
+
     leaderboard = []
 
     for rank, sub in enumerate(submissions, start=1):
         student    = get_user_by_id(db, sub.student_id)
         percentage = (sub.score / sub.total_marks * 100) if sub.total_marks else 0
-        personal_deadline = submission.started_at + timedelta(minutes=exam.duration_minutes)
-        actual_deadline = min(personal_deadline, exam.end_time)
-        if datetime.now(timezone.utc) > actual_deadline:
-            pass
+
         # Calculate time taken
         if sub.submitted_at and sub.started_at:
             delta   = sub.submitted_at - sub.started_at
@@ -176,3 +173,16 @@ def service_get_all_results(db: Session):
             "submitted_at":  sub.submitted_at,
         })
     return results
+
+
+def service_get_my_score(db: Session, exam_id: int, student_id: int):
+    submission = db.query(Submission).filter(
+        Submission.exam_id == exam_id,
+        Submission.student_id == student_id
+    ).first()
+    if not submission:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No submission found for this exam"
+        )
+    return submission

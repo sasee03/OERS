@@ -13,7 +13,7 @@ from services.exam_service import (
 )
 from services.question_service import service_get_questions
 from services.submission_service import (
-    service_start_exam, service_submit_exam,
+    service_get_my_score, service_start_exam, service_submit_exam,
     service_get_leaderboard, service_get_my_results,
 )
 from repositories.submission_repository import get_submission
@@ -87,6 +87,18 @@ def submit_exam(exam_id: int, data: SubmitExam,
     Can only be done once.
     """
     return service_submit_exam(db, exam_id, student.id, data)
+
+@router.get("/exams/{exam_id}/score", response_model=SubmissionOut)
+def get_my_score(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    student= Depends(require_student)
+):
+    """
+    Get the authenticated student's submission (score) for a given exam.
+    Returns 404 if no submission exists (exam not started or not submitted).
+    """
+    return service_get_my_score(db, exam_id, student.id)
 
 
 # ── Results ───────────────────────────────────────────────────

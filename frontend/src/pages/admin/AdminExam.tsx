@@ -4,8 +4,9 @@ import Navbar from '../../components/Navbar';
 import ExamCard from '../../components/ExamCard';
 import { getExams, deleteExam } from '../../services/adminService';
  
+import { Exam } from '../../../types';
 const AdminExams = () => {
-  const [exams, setExams] = useState([]);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
  
   useEffect(() => {
@@ -31,7 +32,7 @@ const AdminExams = () => {
   );
   const inactive = exams.filter((e) => !active.includes(e));
  
-  const handleDelete = async (id) => {
+  const handleDelete = async (id:number) => {
     if (!confirm('Delete this exam?')) return;
     await deleteExam(id);
     // Refetch exams after deletion

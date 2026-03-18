@@ -41,7 +41,8 @@ export default function App() {
           <Route path="/student"                        element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
           <Route path="/student/exams/:id/note"         element={<ProtectedRoute role="student"><ExamNote /></ProtectedRoute>} />
           <Route path="/student/exams/:id/attempt"      element={<ProtectedRoute role="student"><AttemptExam /></ProtectedRoute>} />
-          <Route path="/student/exams/:id/score"        element={<ProtectedRoute role="student"><ScoreLeaderboard /></ProtectedRoute>} />
+          <Route path="/student/exams/:id/score"        element={<ProtectedRoute role="student"><ScoreLeaderboard initialTab="score"/></ProtectedRoute>} />
+          <Route path="/student/exams/:id/leaderboard"  element={<ProtectedRoute role="student"><ScoreLeaderboard initialTab="board"/></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

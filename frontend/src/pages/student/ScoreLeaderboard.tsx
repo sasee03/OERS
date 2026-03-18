@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useLocation } from "react-router-dom"
 import { getMyScore, getLeaderboard, getExam } from "../../services/studentService"
 import { useAuth } from "../../context/AuthContext"
 import Navbar from "../../components/Navbar"
 import { Exam, Submission, LeaderboardEntry } from "../../../types"
 
-export default function ScoreLeaderboard() {
+interface props{
+  initialTab:"score"|"board";
+}
+export default function ScoreLeaderboard({initialTab}:props) {
   const { id }   = useParams<{ id: string }>()
   const { user } = useAuth()
-
   const [score,  setScore]  = useState<Submission | null>(null)
   const [board,  setBoard]  = useState<LeaderboardEntry[]>([])
   const [exam,   setExam]   = useState<Exam | null>(null)
-  const [tab,    setTab]    = useState<"score" | "board">("score")
+  const [tab,    setTab]    = useState<"score" | "board">(initialTab)
   const [missed, setMissed] = useState(false)
 
   useEffect(() => {
