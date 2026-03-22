@@ -9,7 +9,6 @@ const adminLinks = [
   ["Dashboard", "/admin"],
   ["Exams", "/admin/exams"],
   ["Results", "/admin/results"],
-//
 ]
 
 export default function Navbar({ minimal = false }: Props) {

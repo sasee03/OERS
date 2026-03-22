@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState,SubmitEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { register } from "../services/authService"
 
@@ -11,7 +11,7 @@ export default function Register() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault(); setLoading(true); setError("")
     try {
       await register(form)

@@ -4,7 +4,6 @@ import {
   getExam, updateExam, assignExam, getCandidates,
   getQuestions, updateCorrectAnswer, updateQuestion
 } from "../../services/adminService"
-import { sendExamAssignmentEmail } from "../../services/emailService"
 import Navbar from "../../components/Navbar"
 import { Exam, Question, Assignment } from "../../../types"
 
@@ -77,7 +76,7 @@ export default function ModifyExam() {
     } catch { setError("Failed to update question") }
   }
 
-  const handleAssign = async () => {
+    const handleAssign = async () => {
     setMsg(""); setError("")
     const emailList = emails.split(/[,\n]/).map(e => e.trim()).filter(Boolean)
     if (!emailList.length) { setError("Enter at least one email"); return }
@@ -86,25 +85,9 @@ export default function ModifyExam() {
       setMsg(data.map(r => `${r.email}: ${r.status}`).join(" | "))
       setEmails("")
       getCandidates(id!).then(r => setCandidates(r.data))
-      // Send email notification to each assigned student
-      if (exam) {
-        const startStr = new Date(exam.start_time).toLocaleString()
-        const endStr = new Date(exam.end_time).toLocaleString()
-        const assignedEmails = data.filter(r => r.status === "assigned").map(r => r.email)
-        for (const email of assignedEmails) {
-          sendExamAssignmentEmail({
-            to_email: email,
-            exam_title: exam.title,
-            start_time: startStr,
-            end_time: endStr,
-            duration_minutes: exam.duration_minutes,
-            total_questions: exam.total_questions,
-          }).catch(() => {})
-        }
-      }
     } catch { setError("Failed to assign students") }
   }
-
+ 
   const handleUpdateAnswer = async (qId: number) => {
     setMsg(""); setError("")
     try {

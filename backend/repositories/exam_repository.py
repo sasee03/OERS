@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import func
 from datetime import datetime
 from models.exam_model import Exam
 from models.assignment_model import ExamAssignment
@@ -46,7 +46,7 @@ def delete_exam(db: Session, exam: Exam) -> None:
 
 
 def get_active_exams(db: Session) -> list[Exam]:
-    now = datetime.utcnow()
+    now = func.now()
     return db.query(Exam).filter(
         Exam.is_active == True,
         Exam.start_time <= now,
@@ -55,7 +55,7 @@ def get_active_exams(db: Session) -> list[Exam]:
 
 
 def get_scheduled_exams(db: Session) -> list[Exam]:
-    now = datetime.utcnow()
+    now = func.now()
     return db.query(Exam).filter(
         Exam.is_active == True,
         Exam.start_time > now
@@ -63,8 +63,7 @@ def get_scheduled_exams(db: Session) -> list[Exam]:
 
 
 def get_active_exams_for_student(db: Session, student_email: str) -> list[Exam]:
-    """Active exams assigned to this student (by email)."""
-    now = datetime.utcnow()
+    now = func.now()
     return (
         db.query(Exam)
         .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)
@@ -80,8 +79,7 @@ def get_active_exams_for_student(db: Session, student_email: str) -> list[Exam]:
 
 
 def get_scheduled_exams_for_student(db: Session, student_email: str) -> list[Exam]:
-    """Scheduled exams assigned to this student (by email)."""
-    now = datetime.utcnow()
+    now = func.now()
     return (
         db.query(Exam)
         .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)
@@ -96,7 +94,6 @@ def get_scheduled_exams_for_student(db: Session, student_email: str) -> list[Exa
 
 
 def search_exams_for_student(db: Session, query: str, student_email: str) -> list[Exam]:
-    """Search exams assigned to this student."""
     return (
         db.query(Exam)
         .join(ExamAssignment, Exam.id == ExamAssignment.exam_id)

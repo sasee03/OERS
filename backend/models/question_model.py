@@ -4,12 +4,6 @@ from database import Base
 
 
 class Question(Base):
-    """
-    questions table
-    - belongs to one exam
-    - stores 4 options and the correct answer (A/B/C/D)
-    - order_number controls display order
-    """
     __tablename__ = "questions"
 
     id             = Column(Integer, primary_key=True, index=True)
@@ -19,7 +13,7 @@ class Question(Base):
     option_b       = Column(String(500), nullable=False)
     option_c       = Column(String(500), nullable=False)
     option_d       = Column(String(500), nullable=False)
-    correct_answer = Column(String(1), nullable=False)   # "A" "B" "C" "D"
-    order_number   = Column(Integer, nullable=False)     # 1, 2, 3 ...
+    correct_answer = Column(String(1), nullable=False) 
+    order_number   = Column(Integer, nullable=False)   
 
     exam = relationship("Exam", back_populates="questions")

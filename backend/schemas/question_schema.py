@@ -3,13 +3,12 @@ from typing import List
 
 
 class QuestionCreate(BaseModel):
-    """Single question — used inside bulk create"""
     question_text:  str
     option_a:       str
     option_b:       str
     option_c:       str
     option_d:       str
-    correct_answer: str   # must be A B C or D
+    correct_answer: str 
     order_number:   int
 
     @field_validator("correct_answer")
@@ -21,7 +20,6 @@ class QuestionCreate(BaseModel):
 
 
 class BulkQuestionCreate(BaseModel):
-    """Body for POST /api/admin/exams/{id}/questions"""
     questions: List[QuestionCreate]
 
 
@@ -38,12 +36,10 @@ class QuestionOut(BaseModel):
 
 
 class QuestionOutWithAnswer(QuestionOut):
-    """Includes correct_answer — only returned to admin"""
     correct_answer: str
 
 
 class CorrectAnswerUpdate(BaseModel):
-    """Body for PATCH /api/admin/questions/{id}/answer"""
     correct_answer: str
 
     @field_validator("correct_answer")
@@ -55,7 +51,6 @@ class CorrectAnswerUpdate(BaseModel):
 
 
 class QuestionUpdate(BaseModel):
-    """Body for PUT /api/admin/questions/{id} — full question edit"""
     question_text: str
     option_a: str
     option_b: str

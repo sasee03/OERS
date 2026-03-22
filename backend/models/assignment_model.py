@@ -8,12 +8,6 @@ from database import Base
 
 
 class ExamAssignment(Base):
-    """
-    exam_assignments table
-    - admin sends exam link to student emails (TO field)
-    - student_id is filled once that student registers / logs in
-    - unique constraint: one student per exam
-    """
     __tablename__ = "exam_assignments"
 
     id            = Column(Integer, primary_key=True, index=True)

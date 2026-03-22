@@ -9,7 +9,6 @@ from utils.config import settings
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
-    # Ensure at least 60 min; cap at 30 days to avoid 32-bit overflow
     minutes = max(60, min(settings.TOKEN_EXPIRE_MINUTES, 43200))
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=minutes))
     to_encode.update({"exp": int(expire.timestamp())})

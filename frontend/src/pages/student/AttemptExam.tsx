@@ -13,7 +13,7 @@ export default function AttemptExam() {
   const [answers,    setAnswers]    = useState<Record<number, string>>({})
   const [current,    setCurrent]    = useState(0)
   const [timeLeft,   setTimeLeft]   = useState<number | null>(null)
-  const [timeSpent,  setTimeSpent]  = useState<number>(0)  // seconds elapsed since started_at
+  const [timeSpent,  setTimeSpent]  = useState<number>(0)  
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState("")
   const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)

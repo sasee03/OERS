@@ -21,7 +21,6 @@ export default function StudentDashboard() {
       })
   }, [])
 
-  // Dynamic search — debounced (300ms)
   useEffect(() => {
     if (!query.trim()) { setSearched(null); return }
     const t = setTimeout(async () => {

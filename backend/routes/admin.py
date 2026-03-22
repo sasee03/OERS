@@ -29,7 +29,6 @@ from repositories.user_repository import get_all_students
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
-# ── Exam CRUD ─────────────────────────────────────────────────
 
 @router.post("/exams", response_model=ExamOut,
              status_code=status.HTTP_201_CREATED)
@@ -70,8 +69,6 @@ def delete_exam(exam_id: int, db: Session = Depends(get_db),
     service_delete_exam(db, exam_id)
 
 
-# ── Questions ─────────────────────────────────────────────────
-
 @router.post("/exams/{exam_id}/questions",
              response_model=List[QuestionOutWithAnswer],
              status_code=status.HTTP_201_CREATED)
@@ -93,10 +90,6 @@ def get_questions(exam_id: int, db: Session = Depends(get_db),
 def update_correct_answer(question_id: int, data: CorrectAnswerUpdate,
                            db: Session = Depends(get_db),
                            admin=Depends(require_admin)):
-    """
-    Change correct answer for a question.
-    Already submitted scores will NOT change — only future submissions.
-    """
     return service_update_answer(db, question_id, data)
 
 
@@ -105,11 +98,8 @@ def update_correct_answer(question_id: int, data: CorrectAnswerUpdate,
 def update_question_full(question_id: int, data: QuestionUpdate,
                          db: Session = Depends(get_db),
                          admin=Depends(require_admin)):
-    """Edit full question (text, options, correct answer)."""
     return service_update_question(db, question_id, data)
 
-
-# ── Assign students ───────────────────────────────────────────
 
 @router.post("/exams/{exam_id}/assign")
 def assign_exam(exam_id: int, data: AssignExam,
@@ -124,8 +114,6 @@ def get_candidates(exam_id: int, db: Session = Depends(get_db),
     return get_assignments_by_exam(db, exam_id)
 
 
-# ── Results & Leaderboard ─────────────────────────────────────
-
 @router.get("/results")
 def all_results(db: Session = Depends(get_db),
                 admin=Depends(require_admin)):
@@ -138,8 +126,6 @@ def leaderboard(exam_id: int, db: Session = Depends(get_db),
                 admin=Depends(require_admin)):
     return service_get_leaderboard(db, exam_id)
 
-
-# ── Students ──────────────────────────────────────────────────
 
 @router.get("/students", response_model=List[UserResponse])
 def list_students(db: Session = Depends(get_db),

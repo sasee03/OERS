@@ -20,7 +20,6 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchExams() }, [fetchExams])
 
-  // Dynamic search — debounced (300ms)
   useEffect(() => {
     if (!query.trim()) { fetchExams(); return }
     const t = setTimeout(async () => {

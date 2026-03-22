@@ -38,11 +38,6 @@ def service_get_questions(db: Session, exam_id: int):
 
 def service_update_answer(db: Session, question_id: int,
                            data: CorrectAnswerUpdate):
-    """
-    Admin can change the correct answer.
-    Note: scores already submitted will NOT be recalculated.
-    Only future submissions will use the new answer.
-    """
     question = get_question_by_id(db, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
@@ -50,7 +45,6 @@ def service_update_answer(db: Session, question_id: int,
 
 
 def service_update_question(db: Session, question_id: int, data: QuestionUpdate):
-    """Admin can edit full question (text, options, correct answer)."""
     question = get_question_by_id(db, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")

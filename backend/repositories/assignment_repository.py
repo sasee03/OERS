@@ -39,7 +39,6 @@ def is_student_assigned(db: Session, exam_id: int,student_email: str) -> bool:
 
 
 def link_student_id(db: Session, exam_id: int,student_email: str, student_id: int) -> None:
-    """Called when a registered student opens an assigned exam."""
     assignment = (
         db.query(ExamAssignment)
         .filter(

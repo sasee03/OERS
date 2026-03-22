@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class ExamCreate(BaseModel):
-    """Body for POST /api/admin/exams"""
     title:           str
     total_questions: int
     start_time:      datetime
@@ -12,7 +11,6 @@ class ExamCreate(BaseModel):
     duration_minutes: int
 
 class ExamUpdate(BaseModel):
-    """Body for PUT /api/admin/exams/{id} — all fields optional"""
     title: Optional[str] = None
     total_questions: Optional[int] = None
     start_time: Optional[datetime] = None

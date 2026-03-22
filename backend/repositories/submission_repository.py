@@ -3,9 +3,7 @@ from datetime import datetime, timezone
 from models.submission_model import Submission
 
 
-def create_submission(db: Session, exam_id: int,
-                      student_id: int) -> Submission:
-    """Create a submission row when student starts the exam."""
+def create_submission(db: Session, exam_id: int,student_id: int) -> Submission:
     sub = Submission(exam_id=exam_id, student_id=student_id)
     db.add(sub)
     db.commit()
@@ -13,8 +11,7 @@ def create_submission(db: Session, exam_id: int,
     return sub
 
 
-def get_submission(db: Session, exam_id: int,
-                   student_id: int) -> Submission | None:
+def get_submission(db: Session, exam_id: int,student_id: int) -> Submission | None:
     return (
         db.query(Submission)
         .filter(
@@ -24,10 +21,7 @@ def get_submission(db: Session, exam_id: int,
         .first()
     )
 
-def complete_submission(db: Session, submission: Submission,
-                         answers: dict, score: float,
-                         total_marks: int) -> Submission:
-    """Update submission row when student submits answers."""
+def complete_submission(db: Session, submission: Submission, answers: dict, score: float, total_marks: int) -> Submission:
     submission.answers      = answers
     submission.score        = score
     submission.total_marks  = total_marks
@@ -38,8 +32,7 @@ def complete_submission(db: Session, submission: Submission,
     return submission
 
 
-def get_submissions_by_exam(db: Session,
-                             exam_id: int) -> list[Submission]:
+def get_submissions_by_exam(db: Session,exam_id: int) -> list[Submission]:
     return (
         db.query(Submission)
         .filter(
@@ -51,8 +44,7 @@ def get_submissions_by_exam(db: Session,
     )
 
 
-def get_submissions_by_student(db: Session,
-                                student_id: int) -> list[Submission]:
+def get_submissions_by_student(db: Session,student_id: int) -> list[Submission]:
     return (
         db.query(Submission)
         .filter(Submission.student_id == student_id)
@@ -76,7 +68,7 @@ def get_leaderboard_submissions(db: Session, exam_id: int) -> list[Submission]:
         )
         .order_by(
             Submission.score.desc(),
-            (Submission.submitted_at - Submission.started_at).asc()   # shortest duration first
+            (Submission.submitted_at - Submission.started_at).asc()   
         )
         .all()
     )

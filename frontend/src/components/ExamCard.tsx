@@ -16,13 +16,6 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
   const isPast    = now > end || !exam.is_active
   const isScheduled = now < start
 
-  // ── Color schema from your diagram ──────────────────────
-  // Green  = live and not yet attempted
-  // Blue   = attempted
-  // Red    = expired and not attempted (missed)
-  // Gray   = scheduled (not started yet)
-  // Admin always shows green for active, red for inactive
-
   const getCardStyle = () => {
     if (role === "admin") {
       return isLive
@@ -67,7 +60,6 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
   return (
     <div className={`border rounded-lg p-5 transition-all ${getCardStyle()}`}>
 
-      {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-sm font-semibold pr-3 leading-snug">{exam.title}</h3>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -78,7 +70,6 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
         </div>
       </div>
 
-      {/* Meta */}
       <div className="flex flex-col gap-1 mb-4">
         <span className="text-[10px] uppercase tracking-[0.15em] text-zinc-500">
           Start — {new Date(exam.start_time).toLocaleString()}
@@ -91,16 +82,10 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
         </span>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-wrap gap-2">
 
-        {/* ── ADMIN buttons ── */}
         {role === "admin" && (
           <>
-            {/* <Link to={`/admin/exams/${exam.id}/questions`}
-              className="text-[10px] uppercase tracking-widest bg-black text-white px-3 py-1.5 rounded hover:bg-zinc-800 transition-all">
-              Questions
-            </Link> */}
             <Link to={`/admin/exams/${exam.id}/modify`}
               className="text-[10px] uppercase tracking-widest border border-zinc-300 px-3 py-1.5 rounded hover:border-black transition-all">
               Modify
@@ -115,19 +100,14 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
             </button>
           </>
         )}
-
-        {/* ── STUDENT buttons ── */}
         {role === "student" && (
           <>
-            {/* Green card — live and not attempted */}
             {isLive && !isAttempted && (
               <Link to={`/student/exams/${exam.id}/note`}
                 className="text-[10px] uppercase tracking-widest bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700 transition-all">
                 Attempt
               </Link>
             )}
-
-            {/* Blue card — already attempted */}
             {isAttempted && (
               <>
                 <Link to={`/student/exams/${exam.id}/score`}
@@ -141,7 +121,6 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
               </>
             )}
 
-            {/* Red card — expired and not attempted (missed) */}
             {isPast && !isAttempted && (
               <Link to={`/student/exams/${exam.id}/score`}
                 className="text-[10px] uppercase tracking-widest border border-red-300 text-red-600 px-3 py-1.5 rounded hover:bg-red-50 transition-all">
@@ -149,7 +128,6 @@ export default function ExamCard({ exam, role, isAttempted, onDelete }: Props) {
               </Link>
             )}
 
-            {/* Gray card — scheduled, not started yet */}
             {isScheduled && (
               <span className="text-[10px] uppercase tracking-widest border border-zinc-200 text-zinc-400 px-3 py-1.5 rounded">
                 Not started yet

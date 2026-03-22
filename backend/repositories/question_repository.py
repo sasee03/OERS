@@ -3,7 +3,6 @@ from models.question_model import Question
 
 
 def bulk_create_questions(db: Session, questions: list[dict]) -> list[Question]:
-    """Insert multiple questions at once."""
     objs = [Question(**q) for q in questions]
     db.add_all(objs)
     db.commit()

@@ -23,7 +23,6 @@ const AdminExams = () => {
     fetchExams();
   }, []);
  
-  // Filter active/inactive exactly like dashboard
   const active = exams.filter(
     (e) =>
       new Date() >= new Date(e.start_time) &&
@@ -35,7 +34,6 @@ const AdminExams = () => {
   const handleDelete = async (id:number) => {
     if (!confirm('Delete this exam?')) return;
     await deleteExam(id);
-    // Refetch exams after deletion
     const { data } = await getExams();
     setExams(data);
   };
@@ -78,7 +76,6 @@ const AdminExams = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="max-w-7xl mx-auto px-8 py-12">
-        {/* You could add a page title here if you like */}
         <h1 className="text-2xl font-light uppercase tracking-[0.2em] mb-8">
           All Exams
         </h1>

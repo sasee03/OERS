@@ -4,13 +4,11 @@ from datetime import datetime
 
 
 class StartExam(BaseModel):
-    """Body for POST /api/student/exams/{id}/start"""
-    pass   # no body needed — just the exam_id in URL
+    pass 
 
 
 class SubmitExam(BaseModel):
-    """Body for POST /api/student/exams/{id}/submit"""
-    answers: Dict[int, str]   # { question_id: "A" }
+    answers: Dict[int, str]   
 
 
 class SubmissionOut(BaseModel):
@@ -32,4 +30,4 @@ class LeaderboardEntry(BaseModel):
     score:        float
     total_marks:  int
     percentage:   float
-    time_taken:   str          # e.g. "12 mins 34 secs"
+    time_taken:   str   

@@ -17,12 +17,6 @@ from datetime import timedelta
 
 def service_start_exam(db: Session, exam_id: int, student_id: int,
                         student_email: str):
-    """
-    Called when student clicks Start Exam.
-    - Checks exam is active and within time window
-    - Checks student is assigned
-    - Creates submission row with started_at
-    """
     exam = get_exam_by_id(db, exam_id)
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
@@ -52,24 +46,17 @@ def service_start_exam(db: Session, exam_id: int, student_id: int,
             detail="You have already submitted this exam",
         )
 
-    # Return existing started submission if any (page refresh case)
     if existing:
         return existing
 
     return create_submission(db, exam_id, student_id)
 
 def get_student_deadline(exam, submission):
-    """Returns the actual deadline for this student's attempt."""
     personal_deadline = submission.started_at + timedelta(minutes=exam.duration_minutes)
     return min(personal_deadline, exam.end_time)
     
 def service_submit_exam(db: Session, exam_id: int,
                          student_id: int, data: SubmitExam):
-    """
-    Called when student clicks Submit.
-    - Auto-calculates score
-    - Marks submission as completed
-    """
     exam = get_exam_by_id(db, exam_id)
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
@@ -83,7 +70,6 @@ def service_submit_exam(db: Session, exam_id: int,
     if submission.is_completed:
         raise HTTPException(status_code=400, detail="Already submitted")
 
-    # Auto-calculate score
     questions  = get_questions_by_exam(db, exam_id)
     score      = 0
     total      = len(questions)
@@ -93,7 +79,6 @@ def service_submit_exam(db: Session, exam_id: int,
         if submitted and submitted.upper() == q.correct_answer.upper():
             score += 1
 
-    # Convert keys to strings for JSONB storage
     answers_json = {str(k): v for k, v in data.answers.items()}
 
     return complete_submission(db, submission, answers_json, score, total)
@@ -105,7 +90,6 @@ def service_get_leaderboard(db: Session,
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
-    # Get submissions using the repository function
     submissions = get_leaderboard_submissions(db, exam_id)
 
     leaderboard = []
@@ -114,7 +98,6 @@ def service_get_leaderboard(db: Session,
         student    = get_user_by_id(db, sub.student_id)
         percentage = (sub.score / sub.total_marks * 100) if sub.total_marks else 0
 
-        # Calculate time taken (submitted_at - started_at) using timestamps for timezone safety
         if sub.submitted_at and sub.started_at:
             try:
                 end_ts = sub.submitted_at.timestamp() if sub.submitted_at.tzinfo else sub.submitted_at.replace(tzinfo=timezone.utc).timestamp()

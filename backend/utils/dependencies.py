@@ -6,7 +6,6 @@ from database import get_db
 from utils.jwt_handler import decode_access_token
 from repositories.user_repository import get_user_by_id
 
-# Tells FastAPI where the login endpoint is (for Swagger UI)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)):

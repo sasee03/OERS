@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class AssignExam(BaseModel):
-    """Body for POST /api/admin/exams/{id}/assign"""
     student_emails: List[str]
 
 

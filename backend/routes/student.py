@@ -22,27 +22,21 @@ from repositories.submission_repository import get_submission
 
 router = APIRouter(prefix="/api/student", tags=["Student"])
 
-
-# ── Exam Listing ──────────────────────────────────────────────
-
 @router.get("/exams/active", response_model=List[ExamOut])
 def active_exams(db: Session = Depends(get_db),
                  student=Depends(require_student)):
-    """Exams currently open for attempt — only exams assigned to this student."""
     return service_get_active_exams_for_student(db, student.email)
 
 
 @router.get("/exams/scheduled", response_model=List[ExamOut])
 def scheduled_exams(db: Session = Depends(get_db),
                     student=Depends(require_student)):
-    """Upcoming exams — only exams assigned to this student."""
     return service_get_scheduled_exams_for_student(db, student.email)
 
 
 @router.get("/exams/search", response_model=List[ExamOut])
 def search_exams(q: str, db: Session = Depends(get_db),
                  student=Depends(require_student)):
-    """Search exams assigned to this student."""
     return service_search_exams_for_student(db, q, student.email)
 
 
@@ -52,18 +46,12 @@ def get_exam(exam_id: int, db: Session = Depends(get_db),
     return service_get_exam(db, exam_id)
 
 
-# ── Attempt Exam ──────────────────────────────────────────────
 
 @router.post("/exams/{exam_id}/start",
              response_model=SubmissionOut,
              status_code=status.HTTP_201_CREATED)
 def start_exam(exam_id: int, db: Session = Depends(get_db),
                student=Depends(require_student)):
-    """
-    Called when student clicks Start Exam on the Note page.
-    Creates the submission row with started_at timestamp.
-    Returns the submission so frontend knows started_at.
-    """
     return service_start_exam(
         db, exam_id, student.id, student.email
     )
@@ -73,10 +61,6 @@ def start_exam(exam_id: int, db: Session = Depends(get_db),
             response_model=List[QuestionOut])
 def get_questions(exam_id: int, db: Session = Depends(get_db),
                   student=Depends(require_student)):
-    """
-    Returns questions WITHOUT correct_answer.
-    Only accessible after exam has started.
-    """
     return service_get_questions(db, exam_id)
 
 
@@ -85,10 +69,6 @@ def get_questions(exam_id: int, db: Session = Depends(get_db),
 def submit_exam(exam_id: int, data: SubmitExam,
                 db: Session = Depends(get_db),
                 student=Depends(require_student)):
-    """
-    Submit answers — auto-calculates score.
-    Can only be done once.
-    """
     return service_submit_exam(db, exam_id, student.id, data)
 
 @router.get("/exams/{exam_id}/score", response_model=SubmissionOut)
@@ -97,23 +77,14 @@ def get_my_score(
     db: Session = Depends(get_db),
     student= Depends(require_student)
 ):
-    """
-    Get the authenticated student's submission (score) for a given exam.
-    Returns 404 if no submission exists (exam not started or not submitted).
-    """
     return service_get_my_score(db, exam_id, student.id)
 
 
-# ── Results ───────────────────────────────────────────────────
 
 @router.get("/exams/{exam_id}/submission",
             response_model=SubmissionOut)
 def get_my_submission(exam_id: int, db: Session = Depends(get_db),
                       student=Depends(require_student)):
-    """
-    Returns the student's submission for this exam (started or completed).
-    Used by AttemptExam for timer (started_at). 404 if student hasn't started.
-    """
     sub = get_submission(db, exam_id, student.id)
     if not sub:
         from fastapi import HTTPException

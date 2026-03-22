@@ -8,12 +8,6 @@ from database import Base
 
 
 class Exam(Base):
-    """
-    exams table
-    - created by admin
-    - has a start_time and end_time
-    - is_active = False means admin ended it manually
-    """
     __tablename__ = "exams"
 
     id               = Column(Integer, primary_key=True, index=True)
@@ -25,7 +19,7 @@ class Exam(Base):
     is_active        = Column(Boolean, default=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     duration_minutes = Column(Integer, nullable=False, default=60)
-    # relationships
+    
     questions   = relationship("Question",       back_populates="exam", cascade="all, delete-orphan")
     assignments = relationship("ExamAssignment", back_populates="exam", cascade="all, delete-orphan")
     submissions = relationship("Submission",     back_populates="exam", cascade="all, delete-orphan")
